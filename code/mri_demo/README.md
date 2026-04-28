@@ -34,8 +34,9 @@ This leads to the **normal equations**:
 
 $$\left(\sum_{i=1}^C S_i^H F^H M F S_i\right) x \;=\; \sum_{i=1}^C S_i^H F^H y_i$$
 
-which is a linear system $A x = b$ with $A$ Hermitian positive semi-definite,
-perfectly suited for **Conjugate Gradient**.
+which is a linear system $A x = b$ with $A$ Hermitian positive semi-definite.
+Tikhonov regularization ($+\lambda I$) is added to ensure positive definiteness,
+making the system suitable for **Conjugate Gradient**.
 
 ## Installation
 
@@ -53,22 +54,43 @@ This will:
 1. Generate a Shepp-Logan phantom
 2. Create 6 simulated coil sensitivity maps
 3. Simulate undersampled k-space acquisition (R=3 acceleration)
-4. Reconstruct with Conjugate Gradient (hand-written, not from a library)
-5. Compare against zero-filled IFFT reconstruction
-6. Display and save the results
+4. Compute three reconstructions:
+   - Naive sum-of-squares (pure IFFT, no sensitivity info)
+   - Zero-filled with sensitivity-weighted coil combination
+   - CG (SENSE) — full least-squares solution with Tikhonov regularization
+5. Display and save the results
 
 ## Output Files
 
-- `../slides/figures/mri_reconstruction_results.pdf` — Side-by-side comparison figure
-- `../slides/figures/mri_cg_convergence.pdf` — Error-vs-iteration plot
+- `../../slides/figures/mri_reconstruction_results.pdf` — Side-by-side comparison of all reconstructions
+- `../../slides/figures/mri_cg_convergence.pdf` — Residual and true error vs iteration (semiconvergence plot)
+- `../../slides/figures/coil_sensitivity_maps.pdf` — Grid of all coil sensitivity map magnitudes
 
 ## Key Observations
 
-- **Zero-filled reconstruction** shows aliasing artifacts due to undersampling.
-- **CG reconstruction** removes aliasing by using coil sensitivity information to separate
-  overlapping signals (the SENSE principle).
-- CG converges quickly (typically 10-20 iterations) because the normal equations matrix
-  is well-conditioned when the coil sensitivities are sufficiently distinct.
+- **Naive SoS reconstruction** shows both aliasing artifacts and coil shading,
+  since it uses no sensitivity information at all.
+- **Zero-filled reconstruction** (with sensitivity-weighted combination) reduces
+  shading but still shows aliasing artifacts from undersampling.
+- **CG reconstruction** removes aliasing by using coil sensitivity information to
+  separate overlapping signals (the SENSE principle).
+- CG converges quickly (typically 10-20 iterations) because the normal equations
+  matrix is well-conditioned when the coil sensitivities are sufficiently distinct.
+
+### Semiconvergence
+
+An important phenomenon in inverse problems is **semiconvergence**:
+
+- The **residual** $\|r_k\|_2$ always decreases monotonically in CG.
+- The **true reconstruction error** $\| |x_k| - x_{\text{true}} \|_2$ may reach
+  a minimum before the residual is fully converged, then start to increase as
+  the algorithm begins to fit the noise.
+- This means we should stop iterating **before** the residual gets too small!
+- Regularization ($\lambda > 0$) helps by biasing the solution away from
+  noise-fitting and making the system strictly positive definite.
+
+The convergence plot (`mri_cg_convergence.pdf`) shows both the residual and the
+true error on the same axes to illustrate this effect.
 
 ## References
 

@@ -76,40 +76,40 @@ A2 = build_spd_matrix(lambda2, seed=42)  # clustered eigenvalues
 
 # %%
 def conjugate_gradient(A, b, max_iter=100, tol=1e-10):
-    """CG for Ax = b with A SPD. Returns error history."""
+    """CG for Ax = b with A SPD. Returns residual norm history."""
     n = len(b)
     x = np.zeros(n)
     r = b.copy()
     p = r.copy()
-    errors = [np.sqrt(r @ r)]  # residual norm
+    residuals = [np.linalg.norm(r)]  # residual norm
 
     for k in range(max_iter):
         Ap = A @ p
         alpha = (r @ r) / (p @ Ap)
         x = x + alpha * p
         r_new = r - alpha * Ap
-        errors.append(np.linalg.norm(r_new))
-        if errors[-1] < tol:
+        residuals.append(np.linalg.norm(r_new))
+        if residuals[-1] < tol:
             break
         beta = (r_new @ r_new) / (r @ r)
         p = r_new + beta * p
         r = r_new
 
-    return np.array(errors)
+    return np.array(residuals)
 
 # %%
 # Random right-hand side
 b1 = np.random.randn(n)
 b2 = b1.copy()  # same b for fair comparison
 
-errors1 = conjugate_gradient(A1, b1, max_iter=80)
-errors2 = conjugate_gradient(A2, b2, max_iter=80)
+residuals1 = conjugate_gradient(A1, b1, max_iter=80)
+residuals2 = conjugate_gradient(A2, b2, max_iter=80)
 
 # Also compute the theoretical bound for comparison
 sqrt_kappa = np.sqrt(kappa)
 bound_factor = (sqrt_kappa - 1) / (sqrt_kappa + 1)
-k_vals = np.arange(len(errors1))
-theory_bound = 2 * bound_factor**k_vals * errors1[0]
+k_vals = np.arange(len(residuals1))
+theory_bound = 2 * bound_factor**k_vals * residuals1[0]
 
 # %% [markdown]
 # ## Plot: Eigenvalue Distributions and Convergence Curves
@@ -119,53 +119,61 @@ fig, axes = plt.subplots(2, 2, figsize=(14, 10))
 
 # --- Eigenvalue distribution: Uniform ---
 ax = axes[0, 0]
-ax.stem(lambda1, np.ones(n), linefmt='#e74c3c-', markerfmt='o', basefmt=' ')
-ax.set_xlabel('Eigenvalue $\lambda$', fontsize=11)
+markerline, stemlines, baseline = ax.stem(lambda1, np.ones(n),
+                                          linefmt='C3-', markerfmt='o',
+                                          basefmt=' ')
+plt.setp(stemlines, color='#e74c3c')
+plt.setp(markerline, markerfacecolor='#e74c3c', markeredgecolor='#e74c3c')
+ax.set_xlabel(r'Eigenvalue $\lambda$', fontsize=11)
 ax.set_ylabel('Density', fontsize=11)
-ax.set_title('Uniform Eigenvalue Distribution\n$(\\kappa = 100)$', fontsize=13)
+ax.set_title(r'Uniform Eigenvalue Distribution\\$(\kappa = 100)$', fontsize=13)
 ax.set_ylim(0, 1.5)
 ax.grid(True, alpha=0.3)
 
 # --- Eigenvalue distribution: Clustered ---
 ax = axes[0, 1]
-ax.stem(lambda2, np.ones(n), linefmt='#3498db-', markerfmt='o', basefmt=' ')
-ax.set_xlabel('Eigenvalue $\lambda$', fontsize=11)
+markerline2, stemlines2, baseline2 = ax.stem(lambda2, np.ones(n),
+                                              linefmt='C0-', markerfmt='o',
+                                              basefmt=' ')
+plt.setp(stemlines2, color='#3498db')
+plt.setp(markerline2, markerfacecolor='#3498db', markeredgecolor='#3498db')
+ax.set_xlabel(r'Eigenvalue $\lambda$', fontsize=11)
 ax.set_ylabel('Density', fontsize=11)
-ax.set_title('Clustered Eigenvalue Distribution\n$(\\kappa = 100)$', fontsize=13)
+ax.set_title(r'Clustered Eigenvalue Distribution\\$(\kappa = 100)$', fontsize=13)
 ax.set_ylim(0, 1.5)
 ax.grid(True, alpha=0.3)
 
 # --- Convergence: semilog plot ---
 ax = axes[1, 0]
-ax.semilogy(errors1 / errors1[0], linewidth=2, color='#e74c3c',
+ax.semilogy(residuals1 / residuals1[0], linewidth=2, color='#e74c3c',
             label='Uniform eigenvalues')
-ax.semilogy(errors2 / errors2[0], linewidth=2, color='#3498db',
+ax.semilogy(residuals2 / residuals2[0], linewidth=2, color='#3498db',
             label='Clustered eigenvalues')
-ax.semilogy(theory_bound / errors1[0], '--', linewidth=1.5, color='gray',
+ax.semilogy(theory_bound / residuals1[0], '--', linewidth=1.5, color='gray',
             label='Worst-case bound')
-ax.set_xlabel('Iteration $k$', fontsize=11)
+ax.set_xlabel(r'Iteration $k$', fontsize=11)
 ax.set_ylabel(r'Relative Residual $\|r_k\| / \|r_0\|$', fontsize=11)
-ax.set_title('CG Convergence: Same $\kappa$, Different Distributions', fontsize=13)
+ax.set_title(r'CG Convergence: Same $\kappa$, Different Distributions', fontsize=13)
 ax.legend(fontsize=10)
 ax.grid(True, alpha=0.3, which='both')
 
 # --- Zoomed: first 30 iterations ---
 ax = axes[1, 1]
-ax.semilogy(errors1[:30] / errors1[0], linewidth=2, color='#e74c3c',
+ax.semilogy(residuals1[:30] / residuals1[0], linewidth=2, color='#e74c3c',
             label='Uniform eigenvalues')
-ax.semilogy(errors2[:30] / errors2[0], linewidth=2, color='#3498db',
+ax.semilogy(residuals2[:30] / residuals2[0], linewidth=2, color='#3498db',
             label='Clustered eigenvalues')
-ax.semilogy(theory_bound[:30] / errors1[0], '--', linewidth=1.5, color='gray',
+ax.semilogy(theory_bound[:30] / residuals1[0], '--', linewidth=1.5, color='gray',
             label='Worst-case bound')
-ax.set_xlabel('Iteration $k$', fontsize=11)
+ax.set_xlabel(r'Iteration $k$', fontsize=11)
 ax.set_ylabel(r'Relative Residual $\|r_k\| / \|r_0\|$', fontsize=11)
 ax.set_title('First 30 Iterations (Zoom)', fontsize=13)
 ax.legend(fontsize=10)
 ax.grid(True, alpha=0.3, which='both')
 
 plt.suptitle(
-    'Eigenvalue Distribution Effect on CG Convergence\n'
-    'Both matrices have $\kappa = 100$, but clustered eigenvalues converge much faster',
+    r'Eigenvalue Distribution Effect on CG Convergence' + '\n'
+    r'Both matrices have $\kappa = 100$, but clustered eigenvalues converge much faster',
     fontsize=15, y=1.01)
 plt.tight_layout()
 

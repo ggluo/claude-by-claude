@@ -20,10 +20,14 @@ fig_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'slides', 'figures
 os.makedirs(fig_dir, exist_ok=True)
 
 # %% [markdown]
-# ## Create Block Diagram
+# # =========================================================================
+# ## Part 1: Data Generation — Phantom, Coil Sensitivities, and k-Space
+# # =========================================================================
+
+# %% [markdown]
+# ### Generate a Shepp-Logan Phantom
 
 # %%
-# Generate a small Shepp-Logan-like phantom for illustration
 def shepp_logan_small(N=128):
     """Create a simple geometric phantom."""
     x = np.linspace(-1, 1, N)
@@ -43,7 +47,10 @@ def shepp_logan_small(N=128):
         img[mask] = val
     return img
 
-# Coil sensitivity maps (simulated as Gaussian profiles)
+# %% [markdown]
+# ### Generate Coil Sensitivity Maps
+
+# %%
 def generate_sensitivity_maps(N, n_coils=4):
     """Generate coil sensitivity maps as offset 2D Gaussians."""
     maps = []
@@ -57,76 +64,61 @@ def generate_sensitivity_maps(N, n_coils=4):
         maps.append(gauss)
     return maps
 
-# Generate a full coil-combined image (sum of S_i x)
-def coil_combined_image(phantom, sensitivity_maps):
-    return sum(s * phantom for s in sensitivity_maps)
+# %% [markdown]
+# ### Compute Coil Images and k-Space Data
 
+# %%
 N = 64
 phantom = shepp_logan_small(N)
 n_coils = 4
 sens_maps = generate_sensitivity_maps(N, n_coils)
 
-# Per-coil k-space (full, before undersampling)
+# Per-coil images: s_i * x (element-wise modulation by sensitivity)
 coil_images = [s * phantom for s in sens_maps]
+
+# Per-coil k-space (full, before undersampling):
+# FFT of each coil image, with shift to center low frequencies
 kspaces = [np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(img))) for img in coil_images]
 
 # Undersampling mask (R=2 Cartesian, skip every other line)
 mask = np.zeros((N, N))
-mask[::2, :] = 1  # keep every 2nd line
+mask[::2, :] = 1  # keep every 2nd phase-encoding line
 
+# Apply mask to k-space data to simulate undersampled acquisition
 undersampled_kspaces = [k * mask for k in kspaces]
 
 # %% [markdown]
-# ## Create the Diagram
+# # =========================================================================
+# ## Part 2: Diagram Creation — Visualizing the MRI Forward Model
+# # =========================================================================
 
 # %%
 fig = plt.figure(figsize=(18, 10))
 
-# Define positions for the block diagram items
-# Top row: the pipeline
-# We'll use a mix of images and text
-
-# Helper: add a colored box with text
-def add_text_box(ax, x, y, w, h, text, color='#ecf0f1', fontsize=9, edgecolor='gray'):
-    """Add a text box to the axis in data coordinates."""
-    rect = FancyBboxPatch((x - w/2, y - h/2), w, h,
-                          boxstyle="round,pad=0.1",
-                          facecolor=color, edgecolor=edgecolor,
-                          linewidth=1.5, alpha=0.9)
-    ax.add_patch(rect)
-    ax.text(x, y, text, ha='center', va='center', fontsize=fontsize,
-            fontweight='bold')
-
-def add_arrow(ax, x1, y1, x2, y2, color='black'):
-    """Add an arrow from (x1, y1) to (x2, y2)."""
-    ax.annotate('', xy=(x2, y2), xytext=(x1, y1),
-                arrowprops=dict(arrowstyle='->', color=color,
-                                lw=2, connectionstyle='arc3,rad=0'))
-
 # === Row 1: Unknown image + coil sensitivities ===
 ax_main = plt.subplot2grid((6, 6), (0, 0), rowspan=1, colspan=1)
 ax_main.imshow(phantom, cmap='gray', origin='lower')
-ax_main.set_title('Unknown Image\n$x$', fontsize=11, fontweight='bold')
+ax_main.set_title(r'Unknown Image\\$x$', fontsize=11, fontweight='bold')
 ax_main.axis('off')
 
 # Show sensitivity maps in a row
 for c in range(n_coils):
     ax = plt.subplot2grid((6, 6), (0, c + 1), rowspan=1, colspan=1)
     ax.imshow(sens_maps[c], cmap='viridis', origin='lower')
-    ax.set_title(f'Coil {c+1}\n$s_{c+1}(r)$', fontsize=10)
+    ax.set_title(r'Coil %d\\$s_{%d}(r)$' % (c+1, c+1), fontsize=10)
     ax.axis('off')
 
-# Add arrow
-fig.text(0.07, 0.74, '×', fontsize=24, ha='center')
+# Add arrow from image+coils to modulated images
+fig.text(0.07, 0.74, r'$\times$', fontsize=24, ha='center')
 
-# === Row 2: Per-coil images ===
+# === Row 2: Per-coil images (s_i * x) ===
 for c in range(n_coils):
     ax = plt.subplot2grid((6, 6), (1, c + 1), rowspan=1, colspan=1)
     ax.imshow(coil_images[c], cmap='gray', origin='lower')
-    ax.set_title(f'$s_{c+1} \odot x$', fontsize=10)
+    ax.set_title(r'$s_{%d} \odot x$' % (c+1), fontsize=10)
     ax.axis('off')
 
-# Arrow from sensitivities+image to coil images
+# Arrow from coil images to k-space
 fig.text(0.38, 0.62, 'FFT', fontsize=14, ha='center', fontweight='bold',
          bbox=dict(boxstyle='round', facecolor='#f39c12', alpha=0.3))
 
@@ -134,23 +126,22 @@ fig.text(0.38, 0.62, 'FFT', fontsize=14, ha='center', fontweight='bold',
 for c in range(n_coils):
     ax = plt.subplot2grid((6, 6), (2, c + 1), rowspan=1, colspan=1)
     ax.imshow(np.log(np.abs(kspaces[c]) + 1e-6), cmap='gray', origin='lower')
-    ax.set_title('K-space $\\mathcal{F}$', fontsize=10)
+    ax.set_title(r'K-space $\mathcal{F}$', fontsize=10)
     ax.axis('off')
 
-# Arrow
+# Arrow from full k-space to undersampled
 fig.text(0.38, 0.48, 'Undersample', fontsize=12, ha='center', fontweight='bold',
          bbox=dict(boxstyle='round', facecolor='#e74c3c', alpha=0.2))
 
 # === Row 4: Undersampled k-space ===
 for c in range(n_coils):
     ax = plt.subplot2grid((6, 6), (3, c + 1), rowspan=1, colspan=1)
-    # Show mask overlaid
     disp = np.log(np.abs(undersampled_kspaces[c]) + 1e-6)
     ax.imshow(disp, cmap='gray', origin='lower')
-    ax.set_title(f'$M \\cdot \\mathcal{{F}}$ (R=2)', fontsize=10)
+    ax.set_title(r'$M \cdot \mathcal{F}$ (R=2)', fontsize=10)
     ax.axis('off')
 
-# Arrow
+# Arrow to measured data
 fig.text(0.38, 0.34, '+ noise', fontsize=11, ha='center',
          bbox=dict(boxstyle='round', facecolor='#95a5a6', alpha=0.3))
 
@@ -159,7 +150,7 @@ for c in range(n_coils):
     ax = plt.subplot2grid((6, 6), (4, c + 1), rowspan=1, colspan=1)
     k_disp = np.log(np.abs(undersampled_kspaces[c]) + 1e-6)
     ax.imshow(k_disp, cmap='gray', origin='lower')
-    ax.set_title(f'Measured $y_{c+1}$', fontsize=10)
+    ax.set_title(r'Measured $y_{%d}$' % (c+1), fontsize=10)
     ax.axis('off')
 
 # === Bottom: Inverse problem box ===
@@ -180,15 +171,15 @@ rect = FancyBboxPatch((0.05, 0.0), 0.9, 1.0,
 ax_inv.add_patch(rect)
 
 # === Annotations ===
-# Add a note about the undersampling mask
+# Show the undersampling mask (what was acquired vs skipped)
 ax_mask = plt.subplot2grid((6, 6), (2, 0), rowspan=1, colspan=1)
 ax_mask.imshow(mask, cmap='gray', origin='lower')
-ax_mask.set_title('Mask $M$\n(1=acquired)', fontsize=10)
+ax_mask.set_title(r'Mask $M$\\(1=acquired)', fontsize=10)
 ax_mask.axis('off')
 
 # Big overarching title
 fig.suptitle(
-    'Multi-Coil MRI Forward Model: $y_i = M\\,\\mathcal{F}\\,\\{(S_i \\odot x)\\} + \\eta_i$',
+    r'Multi-Coil MRI Forward Model: $y_i = M\,\mathcal{F}\,\{(S_i \odot x)\} + \eta_i$',
     fontsize=18, fontweight='bold', y=1.02)
 
 plt.tight_layout()

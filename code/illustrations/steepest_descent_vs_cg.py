@@ -23,7 +23,7 @@ os.makedirs(fig_dir, exist_ok=True)
 # %% [markdown]
 # ## Define the Quadratic Problem
 #
-# We construct a 2×2 symmetric positive definite matrix A with condition number
+# We construct a 2x2 symmetric positive definite matrix A with condition number
 # $\kappa \approx 10$. The optimal solution is $x^* = A^{-1}b = (1, 1)$.
 
 # %%
@@ -32,7 +32,7 @@ np.random.seed(42)
 theta = np.radians(30)
 R = np.array([[np.cos(theta), -np.sin(theta)],
                [np.sin(theta),  np.cos(theta)]])
-# Eigenvalues: λ1=1, λ2=10 → condition number κ = 10
+# Eigenvalues: lambda1=1, lambda2=10 → condition number kappa = 10
 Lambda = np.diag([1.0, 10.0])
 A = R @ Lambda @ R.T  # A is SPD, condition number ~10
 
@@ -44,7 +44,7 @@ def f(x, y):
     v = np.array([x, y])
     return 0.5 * v @ A @ v - b @ v
 
-# Gradient ∇f(x) = A x - b = -(b - A x) = -residual
+# Gradient grad f(x) = A x - b = -(b - A x) = -residual
 def grad(v):
     return A @ v - b
 
@@ -116,7 +116,10 @@ print(f"Conjugate gradient took {len(traj_cg)-1} iterations")
 print(f"CG converges in at most n={A.shape[0]} steps for exact arithmetic!")
 
 # %% [markdown]
-# ## Plot Side-by-Side Comparison
+# ## Create Contour Grid
+#
+# We use logarithmic contour spacing for better visualization of the quadratic
+# function's bowl shape. A small epsilon is added to avoid log(0).
 
 # %%
 # Create contour grid
@@ -125,21 +128,28 @@ y_range = np.linspace(-1.0, 2.5, 200)
 X, Y = np.meshgrid(x_range, y_range)
 Z = np.vectorize(lambda xv, yv: f(xv, yv))(X, Y)
 
-# Exponential contour levels for better visualization of the quadratic
-levels = np.logspace(np.log10(Z.min() - Z.min() + 1e-10),
-                      np.log10(Z.max() + 1e-10), 20)
+# Use log-spaced contour levels for visualization of the quadratic form.
+# Add a small epsilon to the minimum to prevent log(0) issues, then offset
+# from the actual minimum.
+eps = 1e-10
+Z_shifted = Z - Z.min() + eps
+levels = np.logspace(np.log10(Z_shifted.min()), np.log10(Z_shifted.max()), 20)
 
+# %% [markdown]
+# ## Plot Side-by-Side Comparison
+
+# %%
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
 
 # --- Steepest Descent ---
 ax1.contour(X, Y, Z, levels=levels, colors='gray', alpha=0.5, linewidths=0.5)
 ax1.plot(traj_sd[:, 0], traj_sd[:, 1], 'o-', color='#e74c3c', linewidth=2,
          markersize=7, markerfacecolor='white', markeredgewidth=2, label='SD iterates')
-ax1.plot(traj_sd[0, 0], traj_sd[0, 1], 's', color='black', markersize=10, label='Start $x_0$')
+ax1.plot(traj_sd[0, 0], traj_sd[0, 1], 's', color='black', markersize=10, label=r'Start $x_0$')
 ax1.plot(1, 1, '*', color='#2ecc71', markersize=15, markeredgewidth=1.5,
-         label='Optimum $x^*$')
-ax1.set_xlabel('$x_1$', fontsize=12)
-ax1.set_ylabel('$x_2$', fontsize=12)
+         label=r'Optimum $x^*$')
+ax1.set_xlabel(r'$x_1$', fontsize=12)
+ax1.set_ylabel(r'$x_2$', fontsize=12)
 ax1.set_title('Steepest Descent\n(zigzag in narrow valley)', fontsize=14)
 ax1.legend(fontsize=9, loc='upper right')
 ax1.set_aspect('equal')
@@ -149,11 +159,11 @@ ax1.grid(True, alpha=0.3)
 ax2.contour(X, Y, Z, levels=levels, colors='gray', alpha=0.5, linewidths=0.5)
 ax2.plot(traj_cg[:, 0], traj_cg[:, 1], 'o-', color='#3498db', linewidth=2,
          markersize=7, markerfacecolor='white', markeredgewidth=2, label='CG iterates')
-ax2.plot(traj_cg[0, 0], traj_cg[0, 1], 's', color='black', markersize=10, label='Start $x_0$')
+ax2.plot(traj_cg[0, 0], traj_cg[0, 1], 's', color='black', markersize=10, label=r'Start $x_0$')
 ax2.plot(1, 1, '*', color='#2ecc71', markersize=15, markeredgewidth=1.5,
-         label='Optimum $x^*$')
-ax2.set_xlabel('$x_1$', fontsize=12)
-ax2.set_ylabel('$x_2$', fontsize=12)
+         label=r'Optimum $x^*$')
+ax2.set_xlabel(r'$x_1$', fontsize=12)
+ax2.set_ylabel(r'$x_2$', fontsize=12)
 ax2.set_title('Conjugate Gradient\n(direct path in 2 steps)', fontsize=14)
 ax2.legend(fontsize=9, loc='upper right')
 ax2.set_aspect('equal')
@@ -185,7 +195,7 @@ ax.semilogy(errors_sd, 'o-', color='#e74c3c', linewidth=2, markersize=7,
             markerfacecolor='white', markeredgewidth=2, label='Steepest Descent')
 ax.semilogy(errors_cg, 's-', color='#3498db', linewidth=2, markersize=7,
             markerfacecolor='white', markeredgewidth=2, label='Conjugate Gradient')
-ax.set_xlabel('Iteration $k$', fontsize=12)
+ax.set_xlabel(r'Iteration $k$', fontsize=12)
 ax.set_ylabel(r'Error $\|x_k - x^*\|_2$', fontsize=12)
 ax.set_title('Convergence Speed: SD vs CG', fontsize=14)
 ax.legend(fontsize=11)
@@ -194,4 +204,50 @@ ax.grid(True, alpha=0.3, which='both')
 outpath2 = os.path.join(fig_dir, 'sd_vs_cg_error.pdf')
 plt.savefig(outpath2, dpi=150, bbox_inches='tight')
 print(f"Figure saved to {outpath2}")
+plt.show()
+
+# %% [markdown]
+# ## Contour-Only Paraboloid (for Geometric Intuition Slide)
+#
+# This figure shows only the contour plot of the quadratic function, without
+# any optimization trajectories. It is used early in the lecture (before CG
+# is introduced) to give students a geometric intuition for what the quadratic
+# form looks like and where the optimum sits.
+
+# %%
+fig, ax = plt.subplots(figsize=(8, 6))
+
+# Draw contours
+contour_set = ax.contour(X, Y, Z, levels=levels, colors='gray', alpha=0.5, linewidths=0.5)
+ax.clabel(contour_set, inline=True, fontsize=8, fmt='%.1f')
+
+# Mark the optimum and the starting point
+ax.plot(1, 1, '*', color='#2ecc71', markersize=18, markeredgewidth=1.5,
+        label=r'Minimum $x^*$')
+ax.plot(x0[0], x0[1], 's', color='black', markersize=10, label=r'Start $x_0$')
+
+# Annotate key features
+ax.annotate('Contours are\nellipses', xy=(1.5, 1.2), xytext=(0.3, 2.0),
+            fontsize=11, ha='center',
+            arrowprops=dict(arrowstyle='->', color='#3498db', lw=1.5),
+            bbox=dict(boxstyle='round', facecolor='#ecf0f1', alpha=0.8))
+ax.annotate('Eigenvalues of $A$\ncontrol shape', xy=(-1.0, 1.5), xytext=(-2.0, 2.2),
+            fontsize=11, ha='center',
+            arrowprops=dict(arrowstyle='->', color='#e74c3c', lw=1.5),
+            bbox=dict(boxstyle='round', facecolor='#ecf0f1', alpha=0.8))
+
+ax.set_xlabel(r'$x_1$', fontsize=12)
+ax.set_ylabel(r'$x_2$', fontsize=12)
+ax.set_title(r'Quadratic Form $f(x) = \frac{1}{2}x^T A x - b^T x$' + '\n'
+             r'$\kappa(A) \approx 10$',
+             fontsize=14)
+ax.legend(fontsize=10, loc='lower left')
+ax.set_aspect('equal')
+ax.grid(True, alpha=0.2)
+
+plt.tight_layout()
+
+outpath3 = os.path.join(fig_dir, 'paraboloid_contours.pdf')
+plt.savefig(outpath3, dpi=150, bbox_inches='tight')
+print(f"Figure saved to {outpath3}")
 plt.show()

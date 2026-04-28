@@ -17,6 +17,7 @@
 \usepackage{algpseudocode}
 \usepackage{bm}
 \usepackage{tikz}
+\usetikzlibrary{positioning}
 \usepackage{hyperref}
 
 % ---- Beamer settings ----
@@ -30,8 +31,10 @@
 \newcommand{\F}{\mathcal{F}}
 \newcommand{\Norm}[1]{\|#1\|}
 \newcommand{\inner}[2]{\langle #1, #2 \rangle}
-\newcommand{\xopt}{x^*}
-\newcommand{\Amat}{A}
+
+% NOTE: We use x^* for the optimal solution throughout. In MRI sections we use
+% x^H for conjugate transpose (e.g. S_i^H), so there is no ambiguity between
+% optimal solution x^* and complex conjugate.
 
 % ---- Title page ----
 \title[CG for Inverse Problems \& MRI]{%
@@ -122,7 +125,7 @@
 
         \vspace{0.3cm}
         \begin{tikzpicture}[scale=0.8]
-            \node[draw, circle, minimum size=1cm] (A) at (0,0) {$A^{-1}$?};
+            \node[draw, circle, minimum size=1cm] (A) at (0,0) {$A^{\dagger}$?};
             \node[left=1cm of A] (x) {$x$?};
             \node[right=1cm of A] (b) {$b$};
             \draw[->, dashed] (A) -- (x);
@@ -142,6 +145,7 @@
         \begin{itemize}
             \item Often ill-conditioned (small noise $\to$ large errors)
             \item May be underdetermined (more unknowns than measurements)
+            \item $A$ may not be square --- we need a pseudoinverse, not $A^{-1}$
             \item $A$ may be too large to store explicitly
         \end{itemize}
     \end{alertblock}
@@ -183,18 +187,22 @@
     In 2D, $f(x) = \frac{1}{2}x^T A x - b^T x$ is a \textbf{paraboloid} (bowl).
 
     \vspace{0.3cm}
-    \includegraphics[width=0.65\textwidth]{figures/steepest_descent_vs_cg.pdf}
+    \includegraphics[width=0.65\textwidth]{figures/paraboloid_contours.pdf}
 
     \vspace{0.3cm}
     \begin{itemize}
-        \item The contours are \textbf{ellipses} whose shape is determined by $A$
+        \item The level sets (contours of constant $f$) are \textbf{ellipses}
+              whose shape is determined by the eigenvalues of $A$
         \item The condition number $\kappa(A) = \lambda_{\max}/\lambda_{\min}$ controls
               how ``stretched'' they are
         \item Minimizing $f(x)$ $\Leftrightarrow$ finding the bottom of the bowl
+        \item Our goal: design an algorithm that walks to the minimum efficiently
     \end{itemize}
 \end{frame}
 
 \begin{frame}{Least Squares and the Normal Equations}
+% NOTE: This frame appears early to connect optimization to linear systems,
+% but also foreshadows the SENSE MRI formulation in Section 6.
     \textbf{The overdetermined case:} $A \in \R^{m \times n}$, $m > n$
 
     \[
@@ -203,13 +211,14 @@
 
     \pause
     \vspace{0.2cm}
-    Expand the squared norm:
-    \[
-        \|A x - b\|_2^2 = (Ax - b)^T (Ax - b)
-        = x^T A^T A x - 2 b^T A x + b^T b
-    \]
+    Expand the squared norm step by step:
+    \begin{align*}
+        \|A x - b\|_2^2 &= (Ax - b)^T (Ax - b) \\
+        \onslide<3->{&= x^T A^T A x - (Ax)^T b - b^T (Ax) + b^T b \\}
+        \onslide<4->{&= x^T A^T A x - 2 b^T A x + b^T b}
+    \end{align*}
 
-    \pause
+    \pause\pause
     \vspace{0.2cm}
     Take the gradient and set to zero $\Rightarrow$ \textbf{normal equations}:
     \[
@@ -224,7 +233,8 @@
 
     \pause
     \vspace{0.2cm}
-    \textbf{We will use this structure for the MRI reconstruction problem.}
+    Later, we will use exactly this structure to formulate the \textbf{multi-coil MRI}
+    reconstruction as a least-squares problem and solve it efficiently with CG.
 \end{frame}
 
 % ===========================================================================
@@ -236,6 +246,7 @@
     \textbf{Idea:} At each step, move in the direction where $f$ decreases fastest.
 
     \vspace{0.3cm}
+    {\small
     \begin{algorithm}[H]
         \caption{Steepest Descent for $Ax = b$}
         \begin{algorithmic}[1]
@@ -248,6 +259,7 @@
             \EndFor
         \end{algorithmic}
     \end{algorithm}
+    }
 
     \pause
     \vspace{0.2cm}
@@ -271,7 +283,13 @@
 
     \pause
     \vspace{0.3cm}
-    \begin{block}{Error bound for steepest descent}
+    Recall the \textbf{$A$-norm} (energy norm): $\|v\|_A = \sqrt{v^T A v}$.
+    \\
+    This measures ``error weighted by the system matrix'' --- directions
+    corresponding to large eigenvalues are penalized more.
+
+    \vspace{0.2cm}
+    \begin{block}{Error bound for steepest descent (in $A$-norm)}
         \[
             \frac{\|x_k - x^*\|_A}{\|x_0 - x^*\|_A}
             \leq \left( \frac{\kappa - 1}{\kappa + 1} \right)^k
@@ -355,6 +373,7 @@
 \end{frame}
 
 \begin{frame}{CG Algorithm}
+    {\small
     \begin{algorithm}[H]
         \caption{Conjugate Gradient (Hestenes \& Stiefel, 1952)}
         \begin{algorithmic}[1]
@@ -369,12 +388,13 @@
                 \State $r_{k+1} = r_k - \alpha_k A p_k$
                       \Comment{update residual}
                 \State $\beta_k = \dfrac{r_{k+1}^T r_{k+1}}{r_k^T r_k}$
-                      \Comment{conjugacy coefficient}
+                      \Comment{conjugacy coeff.}
                 \State $p_{k+1} = r_{k+1} + \beta_k p_k$
-                      \Comment{new search direction}
+                      \Comment{new direction}
             \EndFor
         \end{algorithmic}
     \end{algorithm}
+    }
 
     \vspace{0.2cm}
     \begin{itemize}
@@ -419,7 +439,13 @@
 \section{Convergence Properties}
 
 \begin{frame}{Convergence Rate: The Condition Number Story}
-    \textbf{Error bound in the $A$-norm:}
+    \textbf{Steepest Descent (in $A$-norm):}
+    \[
+        \frac{\|x_k - x^*\|_A}{\|x_0 - x^*\|_A}
+        \leq \left( \frac{\kappa - 1}{\kappa + 1} \right)^k
+    \]
+
+    \textbf{Conjugate Gradient (in $A$-norm):}
     \[
         \frac{\|x_k - x^*\|_A}{\|x_0 - x^*\|_A}
         \leq 2 \left( \frac{\sqrt{\kappa} - 1}{\sqrt{\kappa} + 1} \right)^k
@@ -428,18 +454,21 @@
 
     \pause
     \vspace{0.3cm}
-    \textbf{What this means:}
-    \begin{itemize}
-        \item $\kappa = 1$: Converges in 1 iteration (all eigenvalues equal)
-        \item $\kappa = 10$: Factor $\approx 0.52$ per iteration
-        \item $\kappa = 100$: Factor $\approx 0.82$ per iteration
-        \item $\kappa = 1000$: Factor $\approx 0.94$ per iteration --- much slower
-    \end{itemize}
+    \begin{alertblock}{CG replaces $\kappa$ with $\sqrt{\kappa}$ --- a dramatic improvement!}
+        \begin{tabular}{c|c|c}
+            $\kappa$ & SD factor/iter & CG factor/iter \\
+            \hline
+            1        & 0.000 (instant) & 0.000 (instant) \\
+            10       & 0.818 & 0.520 \\
+            100      & 0.980 & 0.819 \\
+            1000     & 0.998 & 0.939 \\
+        \end{tabular}
+    \end{alertblock}
 
     \pause
     \vspace{0.3cm}
-    \begin{block}{Practical consequence}
-        Preconditioning: replace $Ax = b$ with $M^{-1}Ax = M^{-1}b$,
+    \begin{block}{Practical consequence: Preconditioning}
+        Replace $Ax = b$ with $M^{-1}Ax = M^{-1}b$,
         where $M \approx A$ but $M^{-1}$ is easy to apply.
         $\Rightarrow$ Improve $\kappa \to$ faster convergence.
     \end{block}
@@ -448,6 +477,7 @@
 \begin{frame}{Beyond the Condition Number: Eigenvalue Clustering}
     The bound in terms of $\kappa$ is a \emph{worst-case} bound.
     Real convergence depends on the \textbf{distribution} of eigenvalues.
+    \textbf{CG typically converges much faster than the bound predicts!}
 
     \vspace{0.2cm}
     \centering
@@ -458,6 +488,7 @@
         \item \textbf{Left:} Uniform eigenvalues in $[1, 100]$ --- slow convergence
         \item \textbf{Right:} $n-5$ eigenvalues in $[1, 2]$, 5 in $[95, 100]$ --- fast convergence
         \item Both have $\kappa = 100$, but the clustered case converges \textbf{much} faster
+        \item The worst-case bound is identical for both matrices --- it cannot distinguish them!
     \end{itemize}
 
     \pause
@@ -469,10 +500,11 @@
     \textbf{When to stop?}
     \begin{itemize}
         \item Monitor $\|r_k\|_2 / \|b\|_2$ (relative residual)
-        \item Stop when below a tolerance (e.g., $10^{-6}$)
+        \item Stop when below a tolerance (e.g., $10^{-6}$ for well-conditioned systems)
         \item In inverse problems: stop before fitting the noise!
               (This is the \emph{semiconvergence} phenomenon --- the error
-              to the true solution may increase after some point)
+              to the true solution may increase after some point, even though
+              the residual keeps decreasing)
     \end{itemize}
 
     \pause
@@ -598,13 +630,19 @@
     \end{enumerate}
 
     \vspace{0.2cm}
-    \textbf{Step 3: Solve with CG}\\
-    $A_{\text{norm}}$ is Hermitian positive semidefinite --- CG applies directly.
-    Each iteration costs $C$ FFT/IFFT pairs.
+    \textbf{Step 3: Ensure positive definiteness}\\
+    $A_{\text{norm}}$ is Hermitian positive \emph{semidefinite}. With aggressive
+    undersampling, its nullspace may contain nonzero vectors, causing CG to break
+    down. The fix: add a small \textbf{Tikhonov regularization} term:
+    \[
+        (A_{\text{norm}} + \lambda I) \, x = b, \qquad \lambda > 0
+    \]
+    This shifts all eigenvalues by $\lambda$, making the system strictly
+    positive definite with only a small bias cost.
 
     \pause
     \vspace{0.2cm}
-    \begin{block}{Why this works}
+    \begin{block}{Why CG works here}
         The coil sensitivities provide the ``missing'' spatial information
         that was lost by skipping k-space lines. CG efficiently finds the image
         consistent with \emph{all} coil measurements simultaneously.
@@ -625,7 +663,7 @@
     \end{itemize}
 \end{frame}
 
-\begin{frame}{CG Convergence for SENSE Reconstruction}
+\begin{frame}{CG Convergence and Semiconvergence}
     \centering
     \includegraphics[width=0.85\textwidth]{figures/mri_cg_convergence.pdf}
 
@@ -633,6 +671,9 @@
     \begin{itemize}
         \item Residual drops rapidly in the first few iterations
         \item After $\sim$15 iterations, we're close to the true image
+        \item \textbf{Warning:} In inverse problems, the residual \emph{always} decreases
+              monotonically, but the true reconstruction error can start to
+              \emph{increase} as we begin to fit the noise --- this is \textbf{semiconvergence}
         \item The effective condition number depends on:
               \begin{itemize}
                   \item Coil geometry (well-separated coils $\to$ better conditioning)
@@ -653,20 +694,23 @@
               where direct methods are too expensive.
 
         \item \textbf{Steepest descent} is intuitive but suffers from zigzagging
-              --- convergence depends on $\kappa(A)$.
+              --- convergence depends on $\kappa(A)$, with rate $((\kappa-1)/(\kappa+1))^k$.
 
         \item \textbf{Conjugate Gradient} fixes this by using $A$-orthogonal
-              search directions, converging in at most $n$ steps.
+              search directions, replacing $\kappa$ with $\sqrt{\kappa}$ in the
+              convergence bound, and converging in at most $n$ steps.
 
         \item \textbf{Convergence} depends on eigenvalue distribution, not just
               condition number --- clustered eigenvalues mean faster convergence.
+              The condition number bound is a worst-case; real CG is often much faster.
 
         \item \textbf{Multi-coil MRI} uses arrays of receiver coils with distinct
               sensitivity profiles to enable undersampled acquisition.
 
         \item \textbf{SENSE reconstruction} formulates the problem as a linear
               least-squares system; CG solves it efficiently using implicit
-              matrix-vector products via FFTs.
+              matrix-vector products via FFTs. Regularization ($+\lambda I$) ensures
+              positive definiteness and controls noise amplification.
     \end{enumerate}
 
     \vspace{0.3cm}

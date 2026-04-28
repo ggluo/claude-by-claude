@@ -1,9 +1,9 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2025.3.8)  28 APR 2026 22:06
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2025.3.8)  28 APR 2026 22:27
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**slides/lecture.tex
-(./slides/lecture.tex
+**lecture.tex
+(./lecture.tex
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
 (/usr/local/texlive/2025/texmf-dist/tex/latex/beamer/beamer.cls
@@ -859,32 +859,36 @@ File: pgfmodulematrix.code.tex 2023-01-15 v3.1.10 (3.1.10)
 s/tikzlibrarytopaths.code.tex
 File: tikzlibrarytopaths.code.tex 2023-01-15 v3.1.10 (3.1.10)
 )))
+(/usr/local/texlive/2025/texmf-dist/tex/generic/pgf/frontendlayer/tikz/librarie
+s/tikzlibrarypositioning.code.tex
+File: tikzlibrarypositioning.code.tex 2023-01-15 v3.1.10 (3.1.10)
+)
 (/usr/local/texlive/2025/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def
 File: l3backend-pdftex.def 2024-05-08 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count367
 \l__pdf_internal_box=\box84
 )
-(slides/lecture.aux)
+(./lecture.aux)
 \openout1 = `lecture.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 45.
-LaTeX Font Info:    ... okay on input line 45.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 45.
-LaTeX Font Info:    ... okay on input line 45.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 45.
-LaTeX Font Info:    ... okay on input line 45.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 45.
-LaTeX Font Info:    ... okay on input line 45.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 45.
-LaTeX Font Info:    ... okay on input line 45.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 45.
-LaTeX Font Info:    ... okay on input line 45.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 45.
-LaTeX Font Info:    ... okay on input line 45.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 45.
-LaTeX Font Info:    ... okay on input line 45.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 45.
-LaTeX Font Info:    ... okay on input line 45.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 48.
+LaTeX Font Info:    ... okay on input line 48.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 48.
+LaTeX Font Info:    ... okay on input line 48.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 48.
+LaTeX Font Info:    ... okay on input line 48.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 48.
+LaTeX Font Info:    ... okay on input line 48.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 48.
+LaTeX Font Info:    ... okay on input line 48.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 48.
+LaTeX Font Info:    ... okay on input line 48.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 48.
+LaTeX Font Info:    ... okay on input line 48.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 48.
+LaTeX Font Info:    ... okay on input line 48.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 48.
+LaTeX Font Info:    ... okay on input line 48.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -942,76 +946,76 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
-Package hyperref Info: Link coloring OFF on input line 45.
+Package hyperref Info: Link coloring OFF on input line 48.
 
-(slides/lecture.out) (slides/lecture.out)
+(./lecture.out) (./lecture.out)
 \@outlinefile=\write5
 \openout5 = `lecture.out'.
 
 LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
-(Font)                  OT1/cmr/m/n --> OT1/cmss/m/n on input line 45.
+(Font)                  OT1/cmr/m/n --> OT1/cmss/m/n on input line 48.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
-(Font)                  OT1/cmr/bx/n --> OT1/cmss/b/n on input line 45.
+(Font)                  OT1/cmr/bx/n --> OT1/cmss/b/n on input line 48.
 \symnumbers=\mathgroup11
-LaTeX Font Info:    Redeclaring symbol font `pureletters' on input line 45.
+LaTeX Font Info:    Redeclaring symbol font `pureletters' on input line 48.
 LaTeX Font Info:    Encoding `OT1' has changed to `T1' for symbol font
-(Font)              `pureletters' in the math version `normal' on input line 45
+(Font)              `pureletters' in the math version `normal' on input line 48
 .
 LaTeX Font Info:    Overwriting symbol font `pureletters' in version `normal'
-(Font)                  OT1/mathkerncmss/m/sl --> T1/cmss/m/it on input line 45
+(Font)                  OT1/mathkerncmss/m/sl --> T1/cmss/m/it on input line 48
 .
 LaTeX Font Info:    Encoding `OT1' has changed to `T1' for symbol font
-(Font)              `pureletters' in the math version `bold' on input line 45.
+(Font)              `pureletters' in the math version `bold' on input line 48.
 LaTeX Font Info:    Overwriting symbol font `pureletters' in version `bold'
 (Font)                  OT1/mathkerncmss/bx/sl --> T1/cmss/m/it on input line 4
-5.
+8.
 LaTeX Font Info:    Overwriting math alphabet `\mathrm' in version `normal'
-(Font)                  OT1/cmss/m/n --> T1/cmr/m/n on input line 45.
-LaTeX Font Info:    Redeclaring math alphabet \mathbf on input line 45.
-LaTeX Font Info:    Redeclaring math alphabet \mathsf on input line 45.
+(Font)                  OT1/cmss/m/n --> T1/cmr/m/n on input line 48.
+LaTeX Font Info:    Redeclaring math alphabet \mathbf on input line 48.
+LaTeX Font Info:    Redeclaring math alphabet \mathsf on input line 48.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `normal'
-(Font)                  OT1/cmss/m/n --> T1/cmss/m/n on input line 45.
+(Font)                  OT1/cmss/m/n --> T1/cmss/m/n on input line 48.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `bold'
-(Font)                  OT1/cmss/bx/n --> T1/cmss/m/n on input line 45.
-LaTeX Font Info:    Redeclaring math alphabet \mathit on input line 45.
+(Font)                  OT1/cmss/bx/n --> T1/cmss/m/n on input line 48.
+LaTeX Font Info:    Redeclaring math alphabet \mathit on input line 48.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `normal'
-(Font)                  OT1/cmr/m/it --> T1/cmss/m/it on input line 45.
+(Font)                  OT1/cmr/m/it --> T1/cmss/m/it on input line 48.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `bold'
-(Font)                  OT1/cmr/bx/it --> T1/cmss/m/it on input line 45.
-LaTeX Font Info:    Redeclaring math alphabet \mathtt on input line 45.
+(Font)                  OT1/cmr/bx/it --> T1/cmss/m/it on input line 48.
+LaTeX Font Info:    Redeclaring math alphabet \mathtt on input line 48.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `normal'
-(Font)                  OT1/cmtt/m/n --> T1/cmtt/m/n on input line 45.
+(Font)                  OT1/cmtt/m/n --> T1/cmtt/m/n on input line 48.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
-(Font)                  OT1/cmtt/m/n --> T1/cmtt/m/n on input line 45.
+(Font)                  OT1/cmtt/m/n --> T1/cmtt/m/n on input line 48.
 LaTeX Font Info:    Overwriting symbol font `numbers' in version `bold'
-(Font)                  T1/cmss/m/n --> T1/cmss/b/n on input line 45.
+(Font)                  T1/cmss/m/n --> T1/cmss/b/n on input line 48.
 LaTeX Font Info:    Overwriting symbol font `pureletters' in version `bold'
-(Font)                  T1/cmss/m/it --> T1/cmss/b/it on input line 45.
+(Font)                  T1/cmss/m/it --> T1/cmss/b/it on input line 48.
 LaTeX Font Info:    Overwriting math alphabet `\mathrm' in version `bold'
-(Font)                  OT1/cmss/b/n --> T1/cmr/b/n on input line 45.
+(Font)                  OT1/cmss/b/n --> T1/cmr/b/n on input line 48.
 LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `bold'
-(Font)                  T1/cmss/b/n --> T1/cmss/b/n on input line 45.
+(Font)                  T1/cmss/b/n --> T1/cmss/b/n on input line 48.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `bold'
-(Font)                  T1/cmss/m/n --> T1/cmss/b/n on input line 45.
+(Font)                  T1/cmss/m/n --> T1/cmss/b/n on input line 48.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `bold'
-(Font)                  T1/cmss/m/it --> T1/cmss/b/it on input line 45.
+(Font)                  T1/cmss/m/it --> T1/cmss/b/it on input line 48.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
-(Font)                  T1/cmtt/m/n --> T1/cmtt/b/n on input line 45.
-LaTeX Font Info:    Redeclaring symbol font `pureletters' on input line 45.
+(Font)                  T1/cmtt/m/n --> T1/cmtt/b/n on input line 48.
+LaTeX Font Info:    Redeclaring symbol font `pureletters' on input line 48.
 LaTeX Font Info:    Encoding `T1' has changed to `OT1' for symbol font
-(Font)              `pureletters' in the math version `normal' on input line 45
+(Font)              `pureletters' in the math version `normal' on input line 48
 .
 LaTeX Font Info:    Overwriting symbol font `pureletters' in version `normal'
-(Font)                  T1/cmss/m/it --> OT1/mathkerncmss/m/sl on input line 45
+(Font)                  T1/cmss/m/it --> OT1/mathkerncmss/m/sl on input line 48
 .
 LaTeX Font Info:    Encoding `T1' has changed to `OT1' for symbol font
-(Font)              `pureletters' in the math version `bold' on input line 45.
+(Font)              `pureletters' in the math version `bold' on input line 48.
 LaTeX Font Info:    Overwriting symbol font `pureletters' in version `bold'
-(Font)                  T1/cmss/b/it --> OT1/mathkerncmss/m/sl on input line 45
+(Font)                  T1/cmss/b/it --> OT1/mathkerncmss/m/sl on input line 48
 .
 LaTeX Font Info:    Overwriting symbol font `pureletters' in version `bold'
 (Font)                  OT1/mathkerncmss/m/sl --> OT1/mathkerncmss/bx/sl on inp
-ut line 45.
+ut line 48.
 
 (/usr/local/texlive/2025/texmf-dist/tex/latex/translator/translator-basic-dicti
 onary-English.dict
@@ -1036,36 +1040,36 @@ Dictionary: translator-numbers-dictionary, Language: English
 (/usr/local/texlive/2025/texmf-dist/tex/latex/translator/translator-theorem-dic
 tionary-English.dict
 Dictionary: translator-theorem-dictionary, Language: English 
-) (slides/lecture.nav)
+) (./lecture.nav)
 
 [1
 
 {/usr/local/texlive/2025/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{/usr/loc
 al/texlive/2025/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc}]
-(slides/lecture.toc)
+(./lecture.toc)
 
 [2
 
 ]
-LaTeX Font Info:    Trying to load font information for U+msa on input line 91.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 94.
 
  (/usr/local/texlive/2025/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 91.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 94.
 
 
 (/usr/local/texlive/2025/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
 LaTeX Font Info:    Trying to load font information for OT1+mathkerncmss on inp
-ut line 91.
+ut line 94.
 
 (/usr/local/texlive/2025/texmf-dist/tex/latex/sansmathaccent/ot1mathkerncmss.fd
 File: ot1mathkerncmss.fd 2020/01/31 Fontinst v1.933 font definitions for OT1/ma
 thkerncmss.
 )
-Overfull \vbox (7.36623pt too high) detected at line 91
+Overfull \vbox (7.36623pt too high) detected at line 94
  []
 
 
@@ -1073,7 +1077,7 @@ Overfull \vbox (7.36623pt too high) detected at line 91
 [3
 
 ]
-Overfull \vbox (7.36623pt too high) detected at line 91
+Overfull \vbox (7.36623pt too high) detected at line 94
  []
 
 
@@ -1081,7 +1085,7 @@ Overfull \vbox (7.36623pt too high) detected at line 91
 [4
 
 ]
-Overfull \vbox (7.36623pt too high) detected at line 91
+Overfull \vbox (7.36623pt too high) detected at line 94
  []
 
 
@@ -1089,121 +1093,16 @@ Overfull \vbox (7.36623pt too high) detected at line 91
 [5
 
 ]
-
-! Package PGF Math Error: Unknown operator `o' or `of' (in '1cm of A').
-
-See the PGF Math package documentation for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.148 \end{frame}
-                 
-This error message was generated by an \errmessage
-command, so I can't give any explicit help.
-Pretend that you're Hercule Poirot: Examine all clues,
-and deduce the truth by order and method.
-
-
-! Package PGF Math Error: Unknown operator `o' or `of' (in '1cm of A').
-
-See the PGF Math package documentation for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.148 \end{frame}
-                 
-(That was another \errmessage.)
-
-
-Package pgf Warning: Returning node center instead of a point on node border. D
-id you specify a point identical to the center of node ``A''? on input line 148
-.
-
-
-! Package PGF Math Error: Unknown operator `o' or `of' (in '1cm of A').
-
-See the PGF Math package documentation for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.148 \end{frame}
-                 
-(That was another \errmessage.)
-
-
-! Package PGF Math Error: Unknown operator `o' or `of' (in '1cm of A').
-
-See the PGF Math package documentation for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.148 \end{frame}
-                 
-(That was another \errmessage.)
-
-
-Package pgf Warning: Returning node center instead of a point on node border. D
-id you specify a point identical to the center of node ``A''? on input line 148
-.
+Overfull \vbox (6.12381pt too high) detected at line 152
+ []
 
 
 
 [6
 
 ]
-
-! Package PGF Math Error: Unknown operator `o' or `of' (in '1cm of A').
-
-See the PGF Math package documentation for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.148 \end{frame}
-                 
-(That was another \errmessage.)
-
-
-! Package PGF Math Error: Unknown operator `o' or `of' (in '1cm of A').
-
-See the PGF Math package documentation for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.148 \end{frame}
-                 
-(That was another \errmessage.)
-
-
-Package pgf Warning: Returning node center instead of a point on node border. D
-id you specify a point identical to the center of node ``A''? on input line 148
-.
-
-
-! Package PGF Math Error: Unknown operator `o' or `of' (in '1cm of A').
-
-See the PGF Math package documentation for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.148 \end{frame}
-                 
-(That was another \errmessage.)
-
-
-! Package PGF Math Error: Unknown operator `o' or `of' (in '1cm of A').
-
-See the PGF Math package documentation for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.148 \end{frame}
-                 
-(That was another \errmessage.)
-
-
-Package pgf Warning: Returning node center instead of a point on node border. D
-id you specify a point identical to the center of node ``A''? on input line 148
-.
+Overfull \vbox (6.12381pt too high) detected at line 152
+ []
 
 
 
@@ -1222,18 +1121,22 @@ id you specify a point identical to the center of node ``A''? on input line 148
 [10
 
 ]
-<figures/steepest_descent_vs_cg.pdf, id=224, 996.13574pt x 466.08884pt>
-File: figures/steepest_descent_vs_cg.pdf Graphic file (type pdf)
-<use figures/steepest_descent_vs_cg.pdf>
-Package pdftex.def Info: figures/steepest_descent_vs_cg.pdf  used on input line
- 195.
-(pdftex.def)             Requested size: 281.67096pt x 131.79124pt.
+<figures/paraboloid_contours.pdf, id=224, 487.24257pt x 424.41624pt>
+File: figures/paraboloid_contours.pdf Graphic file (type pdf)
+<use figures/paraboloid_contours.pdf>
+Package pdftex.def Info: figures/paraboloid_contours.pdf  used on input line 20
+1.
+(pdftex.def)             Requested size: 281.67096pt x 245.35855pt.
+
+Overfull \vbox (138.97089pt too high) detected at line 201
+ []
+
 
 
 [11
 
- <slides/figures/steepest_descent_vs_cg.pdf>]
-Overfull \vbox (3.09377pt too high) detected at line 228
+ <./figures/paraboloid_contours.pdf>]
+Overfull \vbox (53.01945pt too high) detected at line 238
  []
 
 
@@ -1241,7 +1144,7 @@ Overfull \vbox (3.09377pt too high) detected at line 228
 [12
 
 ]
-Overfull \vbox (3.09377pt too high) detected at line 228
+Overfull \vbox (53.01945pt too high) detected at line 238
  []
 
 
@@ -1249,7 +1152,7 @@ Overfull \vbox (3.09377pt too high) detected at line 228
 [13
 
 ]
-Overfull \vbox (3.09377pt too high) detected at line 228
+Overfull \vbox (53.01945pt too high) detected at line 238
  []
 
 
@@ -1257,7 +1160,7 @@ Overfull \vbox (3.09377pt too high) detected at line 228
 [14
 
 ]
-Overfull \vbox (3.09377pt too high) detected at line 228
+Overfull \vbox (53.01945pt too high) detected at line 238
  []
 
 
@@ -1265,6 +1168,10 @@ Overfull \vbox (3.09377pt too high) detected at line 228
 [15
 
 ]
+Overfull \vbox (53.01945pt too high) detected at line 238
+ []
+
+
 
 [16
 
@@ -1273,61 +1180,62 @@ Overfull \vbox (3.09377pt too high) detected at line 228
 [17
 
 ]
-File: figures/steepest_descent_vs_cg.pdf Graphic file (type pdf)
-<use figures/steepest_descent_vs_cg.pdf>
-Package pdftex.def Info: figures/steepest_descent_vs_cg.pdf  used on input line
- 281.
-(pdftex.def)             Requested size: 303.3395pt x 141.92574pt.
-
-Overfull \vbox (70.66309pt too high) detected at line 281
- []
-
-
 
 [18
 
 ]
+<figures/steepest_descent_vs_cg.pdf, id=367, 996.13574pt x 466.08884pt>
 File: figures/steepest_descent_vs_cg.pdf Graphic file (type pdf)
 <use figures/steepest_descent_vs_cg.pdf>
 Package pdftex.def Info: figures/steepest_descent_vs_cg.pdf  used on input line
- 281.
+ 299.
 (pdftex.def)             Requested size: 303.3395pt x 141.92574pt.
 
-Overfull \vbox (70.66309pt too high) detected at line 281
+Overfull \vbox (117.46115pt too high) detected at line 299
  []
 
 
 
 [19
 
-]
-<figures/sd_vs_cg_error.pdf, id=389, 515.72673pt x 341.81451pt>
-File: figures/sd_vs_cg_error.pdf Graphic file (type pdf)
-<use figures/sd_vs_cg_error.pdf>
-Package pdftex.def Info: figures/sd_vs_cg_error.pdf  used on input line 297.
-(pdftex.def)             Requested size: 281.67096pt x 186.6842pt.
+ <./figures/steepest_descent_vs_cg.pdf>]
+File: figures/steepest_descent_vs_cg.pdf Graphic file (type pdf)
+<use figures/steepest_descent_vs_cg.pdf>
+Package pdftex.def Info: figures/steepest_descent_vs_cg.pdf  used on input line
+ 299.
+(pdftex.def)             Requested size: 303.3395pt x 141.92574pt.
 
-Overfull \vbox (63.5183pt too high) detected at line 297
+Overfull \vbox (117.46115pt too high) detected at line 299
  []
 
 
 
 [20
 
- <slides/figures/sd_vs_cg_error.pdf>]
+]
+<figures/sd_vs_cg_error.pdf, id=459, 515.72673pt x 341.81451pt>
 File: figures/sd_vs_cg_error.pdf Graphic file (type pdf)
 <use figures/sd_vs_cg_error.pdf>
-Package pdftex.def Info: figures/sd_vs_cg_error.pdf  used on input line 297.
+Package pdftex.def Info: figures/sd_vs_cg_error.pdf  used on input line 315.
 (pdftex.def)             Requested size: 281.67096pt x 186.6842pt.
 
-Overfull \vbox (63.5183pt too high) detected at line 297
+Overfull \vbox (63.5183pt too high) detected at line 315
  []
 
 
 
 [21
 
-]
+ <./figures/sd_vs_cg_error.pdf>]
+File: figures/sd_vs_cg_error.pdf Graphic file (type pdf)
+<use figures/sd_vs_cg_error.pdf>
+Package pdftex.def Info: figures/sd_vs_cg_error.pdf  used on input line 315.
+(pdftex.def)             Requested size: 281.67096pt x 186.6842pt.
+
+Overfull \vbox (63.5183pt too high) detected at line 315
+ []
+
+
 
 [22
 
@@ -1340,15 +1248,11 @@ Overfull \vbox (63.5183pt too high) detected at line 297
 [24
 
 ]
-Overfull \vbox (0.74017pt too high) detected at line 355
- []
-
-
 
 [25
 
 ]
-Overfull \vbox (0.74017pt too high) detected at line 355
+Overfull \vbox (0.74017pt too high) detected at line 373
  []
 
 
@@ -1356,7 +1260,7 @@ Overfull \vbox (0.74017pt too high) detected at line 355
 [26
 
 ]
-Overfull \vbox (40.26924pt too high) detected at line 385
+Overfull \vbox (0.74017pt too high) detected at line 373
  []
 
 
@@ -1364,7 +1268,7 @@ Overfull \vbox (40.26924pt too high) detected at line 385
 [27
 
 ]
-Overfull \vbox (16.02551pt too high) detected at line 414
+Overfull \vbox (70.56927pt too high) detected at line 405
  []
 
 
@@ -1372,7 +1276,7 @@ Overfull \vbox (16.02551pt too high) detected at line 414
 [28
 
 ]
-Overfull \vbox (16.02551pt too high) detected at line 414
+Overfull \vbox (16.02551pt too high) detected at line 434
  []
 
 
@@ -1380,37 +1284,31 @@ Overfull \vbox (16.02551pt too high) detected at line 414
 [29
 
 ]
+Overfull \vbox (16.02551pt too high) detected at line 434
+ []
+
+
 
 [30
 
 ]
+Overfull \vbox (84.93872pt too high) detected at line 475
+ []
+
+
 
 [31
 
 ]
+Overfull \vbox (84.93872pt too high) detected at line 475
+ []
+
+
 
 [32
 
 ]
-
-LaTeX Warning: File `figures/eigenvalue_illustration.pdf' not found on input li
-ne 466.
-
-
-! Package pdftex.def Error: File `figures/eigenvalue_illustration.pdf' not foun
-d: using draft setting.
-
-See the pdftex.def package documentation for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.466 \end{frame}
-                 
-Try typing  <return>  to proceed.
-If that doesn't work, type  X <return>  to quit.
-
-
-Overfull \vbox (268.32024pt too high) detected at line 466
+Overfull \vbox (84.93872pt too high) detected at line 475
  []
 
 
@@ -1418,32 +1316,31 @@ Overfull \vbox (268.32024pt too high) detected at line 466
 [33
 
 ]
+<figures/eigenvalue_illustration.pdf, id=676, 1003.34541pt x 733.33224pt>
+File: figures/eigenvalue_illustration.pdf Graphic file (type pdf)
+<use figures/eigenvalue_illustration.pdf>
+Package pdftex.def Info: figures/eigenvalue_illustration.pdf  used on input lin
+e 497.
+(pdftex.def)             Requested size: 368.34506pt x 269.225pt.
 
-LaTeX Warning: File `figures/eigenvalue_illustration.pdf' not found on input li
-ne 466.
-
-
-! Package pdftex.def Error: File `figures/eigenvalue_illustration.pdf' not foun
-d: using draft setting.
-
-See the pdftex.def package documentation for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.466 \end{frame}
-                 
-Try typing  <return>  to proceed.
-If that doesn't work, type  X <return>  to quit.
-
-
-Overfull \vbox (268.32024pt too high) detected at line 466
+Overfull \vbox (182.6991pt too high) detected at line 497
  []
 
 
 
 [34
 
-]
+ <./figures/eigenvalue_illustration.pdf>]
+File: figures/eigenvalue_illustration.pdf Graphic file (type pdf)
+<use figures/eigenvalue_illustration.pdf>
+Package pdftex.def Info: figures/eigenvalue_illustration.pdf  used on input lin
+e 497.
+(pdftex.def)             Requested size: 368.34506pt x 269.225pt.
+
+Overfull \vbox (182.6991pt too high) detected at line 497
+ []
+
+
 
 [35
 
@@ -1452,15 +1349,11 @@ Overfull \vbox (268.32024pt too high) detected at line 466
 [36
 
 ]
-Overfull \vbox (50.96239pt too high) detected at line 537
- []
-
-
 
 [37
 
 ]
-Overfull \vbox (50.96239pt too high) detected at line 537
+Overfull \vbox (50.96239pt too high) detected at line 569
  []
 
 
@@ -1468,43 +1361,43 @@ Overfull \vbox (50.96239pt too high) detected at line 537
 [38
 
 ]
-<figures/mri_acquisition_model.pdf, id=626, 1026.53986pt x 740.7675pt>
-File: figures/mri_acquisition_model.pdf Graphic file (type pdf)
-<use figures/mri_acquisition_model.pdf>
-Package pdftex.def Info: figures/mri_acquisition_model.pdf  used on input line 
-555.
-(pdftex.def)             Requested size: 303.3395pt x 218.88622pt.
-
-
-LaTeX Font Warning: Font shape `T1/cmss/b/n' undefined
-(Font)              using `T1/cmss/m/n' instead on input line 555.
-
-
-Overfull \vbox (108.72255pt too high) detected at line 555
+Overfull \vbox (50.96239pt too high) detected at line 569
  []
 
 
 
 [39
 
- <slides/figures/mri_acquisition_model.pdf>]
-
-[40
-
 ]
+<figures/mri_acquisition_model.pdf, id=795, 1039.80034pt x 740.7675pt>
+File: figures/mri_acquisition_model.pdf Graphic file (type pdf)
+<use figures/mri_acquisition_model.pdf>
+Package pdftex.def Info: figures/mri_acquisition_model.pdf  used on input line 
+587.
+(pdftex.def)             Requested size: 303.3395pt x 216.10564pt.
 
-[41
 
-]
-Overfull \vbox (47.13304pt too high) detected at line 612
+LaTeX Font Warning: Font shape `T1/cmss/b/n' undefined
+(Font)              using `T1/cmss/m/n' instead on input line 587.
+
+
+Overfull \vbox (105.94197pt too high) detected at line 587
  []
 
 
 
+[40
+
+ <./figures/mri_acquisition_model.pdf>]
+
+[41
+
+]
+
 [42
 
 ]
-Overfull \vbox (47.13304pt too high) detected at line 612
+Overfull \vbox (102.29617pt too high) detected at line 650
  []
 
 
@@ -1512,25 +1405,7 @@ Overfull \vbox (47.13304pt too high) detected at line 612
 [43
 
 ]
-
-LaTeX Warning: File `figures/mri_reconstruction_results.pdf' not found on input
- line 626.
-
-
-! Package pdftex.def Error: File `figures/mri_reconstruction_results.pdf' not f
-ound: using draft setting.
-
-See the pdftex.def package documentation for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.626 \end{frame}
-                 
-Try typing  <return>  to proceed.
-If that doesn't work, type  X <return>  to quit.
-
-
-Overfull \vbox (254.96912pt too high) detected at line 626
+Overfull \vbox (102.29617pt too high) detected at line 650
  []
 
 
@@ -1538,41 +1413,37 @@ Overfull \vbox (254.96912pt too high) detected at line 626
 [44
 
 ]
+<figures/mri_reconstruction_results.pdf, id=1007, 1741.58662pt x 729.30267pt>
+File: figures/mri_reconstruction_results.pdf Graphic file (type pdf)
+<use figures/mri_reconstruction_results.pdf>
+Package pdftex.def Info: figures/mri_reconstruction_results.pdf  used on input 
+line 664.
+(pdftex.def)             Requested size: 390.00697pt x 163.31816pt.
 
-LaTeX Warning: File `figures/mri_cg_convergence.pdf' not found on input line 64
-3.
-
-
-! Package pdftex.def Error: File `figures/mri_cg_convergence.pdf' not found: us
-ing draft setting.
-
-See the pdftex.def package documentation for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.643 \end{frame}
-                 
-Try typing  <return>  to proceed.
-If that doesn't work, type  X <return>  to quit.
-
-
-Overfull \vbox (243.1619pt too high) detected at line 643
+Overfull \vbox (28.17314pt too high) detected at line 664
  []
 
 
 
 [45
 
-]
-Overfull \vbox (32.93929pt too high) detected at line 678
+ <./figures/mri_reconstruction_results.pdf>]
+<figures/mri_cg_convergence.pdf, id=1137, 1004.65634pt x 371.52489pt>
+File: figures/mri_cg_convergence.pdf Graphic file (type pdf)
+<use figures/mri_cg_convergence.pdf>
+Package pdftex.def Info: figures/mri_cg_convergence.pdf  used on input line 684
+.
+(pdftex.def)             Requested size: 368.34506pt x 136.21486pt.
+
+Overfull \vbox (51.73062pt too high) detected at line 684
  []
 
 
 
 [46
 
-]
-Overfull \vbox (11.10776pt too high) detected at line 706
+ <./figures/mri_cg_convergence.pdf>]
+Overfull \vbox (60.1393pt too high) detected at line 722
  []
 
 
@@ -1580,8 +1451,16 @@ Overfull \vbox (11.10776pt too high) detected at line 706
 [47
 
 ]
+Overfull \vbox (11.10776pt too high) detected at line 750
+ []
+
+
 
 [48
+
+]
+
+[49
 
 ]
 \tf@nav=\write6
@@ -1593,7 +1472,7 @@ Overfull \vbox (11.10776pt too high) detected at line 706
 \tf@snm=\write8
 \openout8 = `lecture.snm'.
 
- (slides/lecture.aux)
+ (./lecture.aux)
  ***********
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
@@ -1606,41 +1485,43 @@ Package rerunfilecheck Info: File `lecture.out' has not changed.
 (rerunfilecheck)             Checksum: 7222C3A8FCDCB53C8EB84BC0D401756F;985.
  ) 
 Here is how much of TeX's memory you used:
- 26451 strings out of 473190
- 524417 string characters out of 5715801
- 889427 words of memory out of 5000000
- 49042 multiletter control sequences out of 15000+600000
- 592985 words of font info for 115 fonts, out of 8000000 for 9000
+ 26452 strings out of 473190
+ 523284 string characters out of 5715801
+ 894642 words of memory out of 5000000
+ 49034 multiletter control sequences out of 15000+600000
+ 596587 words of font info for 126 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 128i,11n,123p,389b,914s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 128i,11n,123p,382b,914s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb
 ></usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb>
-</usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></
-usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmss10.pfb></u
-sr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmss8.pfb></usr
-/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmssi10.pfb></usr
-/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmssi8.pfb></usr/
-local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/l
-ocal/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/loc
-al/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb></usr
-/local/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sfsi1095.pfb></usr/l
-ocal/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sfsi1200.pfb></usr/loc
-al/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sfso1095.pfb></usr/local
-/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sfss0600.pfb></usr/local/t
-exlive/2025/texmf-dist/fonts/type1/public/cm-super/sfss0800.pfb></usr/local/tex
-live/2025/texmf-dist/fonts/type1/public/cm-super/sfss0900.pfb></usr/local/texli
-ve/2025/texmf-dist/fonts/type1/public/cm-super/sfss1000.pfb></usr/local/texlive
-/2025/texmf-dist/fonts/type1/public/cm-super/sfss1095.pfb></usr/local/texlive/2
-025/texmf-dist/fonts/type1/public/cm-super/sfss1200.pfb></usr/local/texlive/202
-5/texmf-dist/fonts/type1/public/cm-super/sfss1440.pfb></usr/local/texlive/2025/
-texmf-dist/fonts/type1/public/cm-super/sfsx0800.pfb></usr/local/texlive/2025/te
-xmf-dist/fonts/type1/public/cm-super/sfsx1095.pfb></usr/local/texlive/2025/texm
-f-dist/fonts/type1/public/cm-super/sfsx2488.pfb></usr/local/texlive/2025/texmf-
-dist/fonts/type1/public/cm-super/sftt1095.pfb>
-Output written on slides/lecture.pdf (48 pages, 766486 bytes).
+</usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb><
+/usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></u
+sr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmss10.pfb></us
+r/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmss8.pfb></usr/
+local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmssi10.pfb></usr/
+local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmssi12.pfb></usr/
+local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmssi8.pfb></usr/l
+ocal/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/lo
+cal/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/loca
+l/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb></usr/
+local/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sfsi1095.pfb></usr/lo
+cal/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sfsi1200.pfb></usr/loca
+l/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sfso1095.pfb></usr/local/
+texlive/2025/texmf-dist/fonts/type1/public/cm-super/sfss0600.pfb></usr/local/te
+xlive/2025/texmf-dist/fonts/type1/public/cm-super/sfss0800.pfb></usr/local/texl
+ive/2025/texmf-dist/fonts/type1/public/cm-super/sfss0900.pfb></usr/local/texliv
+e/2025/texmf-dist/fonts/type1/public/cm-super/sfss1000.pfb></usr/local/texlive/
+2025/texmf-dist/fonts/type1/public/cm-super/sfss1095.pfb></usr/local/texlive/20
+25/texmf-dist/fonts/type1/public/cm-super/sfss1200.pfb></usr/local/texlive/2025
+/texmf-dist/fonts/type1/public/cm-super/sfss1440.pfb></usr/local/texlive/2025/t
+exmf-dist/fonts/type1/public/cm-super/sfsx0800.pfb></usr/local/texlive/2025/tex
+mf-dist/fonts/type1/public/cm-super/sfsx1095.pfb></usr/local/texlive/2025/texmf
+-dist/fonts/type1/public/cm-super/sfsx2488.pfb></usr/local/texlive/2025/texmf-d
+ist/fonts/type1/public/cm-super/sftt1095.pfb>
+Output written on lecture.pdf (49 pages, 1110255 bytes).
 PDF statistics:
- 999 PDF objects out of 1000 (max. 8388607)
- 536 compressed objects within 6 object streams
- 104 named destinations out of 1000 (max. 500000)
- 1020 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 1376 PDF objects out of 1440 (max. 8388607)
+ 618 compressed objects within 7 object streams
+ 106 named destinations out of 1000 (max. 500000)
+ 1166 words of extra memory for PDF output out of 10000 (max. 10000000)
 

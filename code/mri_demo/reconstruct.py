@@ -146,7 +146,7 @@ def cartesian_undersampling_mask(N, R):
     mask[::R, :] = 1.0  # keep every R-th phase-encoding line
     return mask
 
-def simulate_acquisition(phantom, sensitivity_maps, mask, noise_std=0.02):
+def simulate_acquisition(phantom, sensitivity_maps, mask, noise_std=0.02, seed=42):
     """
     Simulate multi-coil MRI acquisition.
 
@@ -160,6 +160,7 @@ def simulate_acquisition(phantom, sensitivity_maps, mask, noise_std=0.02):
     - kspace_data: list of undersampled k-spaces (complex arrays)
     - kspace_full: list of full k-spaces (for reference)
     """
+    rng = np.random.default_rng(seed)
     kspace_data = []
     kspace_full = []
 
@@ -173,9 +174,9 @@ def simulate_acquisition(phantom, sensitivity_maps, mask, noise_std=0.02):
         # Undersample
         k_undersampled = mask * k_full
 
-        # Add complex Gaussian noise
-        noise_real = np.random.randn(*k_undersampled.shape) * noise_std
-        noise_imag = np.random.randn(*k_undersampled.shape) * noise_std
+        # Add complex Gaussian noise (with seeded RNG for reproducibility)
+        noise_real = rng.standard_normal(k_undersampled.shape) * noise_std
+        noise_imag = rng.standard_normal(k_undersampled.shape) * noise_std
         k_noisy = k_undersampled + (noise_real + 1j * noise_imag)
 
         kspace_data.append(k_noisy)
@@ -184,21 +185,48 @@ def simulate_acquisition(phantom, sensitivity_maps, mask, noise_std=0.02):
     return kspace_data, kspace_full
 
 # %% [markdown]
-# ## 4. Zero-Filled Coil-Combined Reconstruction (Baseline)
+# ## 4. Baseline Reconstructions
 #
-# The simplest reconstruction: zero-fill unacquired k-space locations,
-# inverse FFT, then combine coils using the sum-of-squares method.
-# This produces aliasing artifacts at acceleration factor R > 1.
+# We compute three baseline reconstructions for pedagogical comparison:
+# 1. **Naive sum-of-squares (SoS):** Pure per-coil IFFT without any
+#    sensitivity weighting — the simplest possible reconstruction.
+# 2. **Zero-filled with sensitivity weighting:** IFFT of zero-filled k-space,
+#    then combine coils using conjugate-sensitivity weighting and
+#    sum-of-squares normalization. Already uses some sensitivity information
+#    for coil combination, making it better than naive SoS but still showing
+#    aliasing artifacts.
+# 3. **CG (SENSE):** Full least-squares solution using conjugate gradient,
+#    which properly inverts the SENSE model.
 
 # %%
+def naive_sos_reconstruction(kspace_data):
+    """
+    Pure sum-of-squares coil combination — the simplest possible reconstruction.
+
+    For each coil: IFFT the zero-filled k-space, then compute sqrt(sum |IFFT_i|^2).
+    This does NOT use any coil sensitivity information for the combination,
+    so it shows both aliasing AND coil shading artifacts.
+    """
+    sos = np.zeros(kspace_data[0].shape, dtype=np.float64)
+    for y in kspace_data:
+        coil_img = fftshift(ifft2(ifftshift(y)))
+        sos += np.abs(coil_img)**2
+    return np.sqrt(sos)
+
 def zero_filled_reconstruction(kspace_data, sensitivity_maps):
     """
-    Simple zero-filled IFFT reconstruction with sum-of-squares coil combination.
+    Zero-filled IFFT reconstruction with sensitivity-weighted coil combination.
 
     For each coil i:
     1. Inverse FFT of zero-filled k-space
-    2. Divide by coil sensitivity (approximate)
-    3. Sum-of-squares combination
+    2. Weight by conjugate coil sensitivity
+    3. Normalize by sum-of-squares of sensitivity magnitudes
+
+    NOTE: This reconstruction already uses coil sensitivity information for
+    combining the per-coil images (via conj(s_i) weighting and SoS normalization),
+    which makes it better than a purely naive IFFT. However, it does NOT solve
+    the full SENSE inverse problem — the zero-filling in k-space still produces
+    aliasing artifacts from the undersampling.
     """
     C = len(kspace_data)
     N = kspace_data[0].shape[0]
@@ -243,6 +271,8 @@ def zero_filled_reconstruction(kspace_data, sensitivity_maps):
 #
 # The matrix $A_{\text{norm}}$ is Hermitian positive semi-definite.
 # We apply it implicitly (never form it explicitly) via FFT operations.
+# Tikhonov regularization (adding $\lambda I$) ensures positive definiteness
+# for CG.
 
 # %%
 def apply_sense_normal_operator(x, sensitivity_maps, mask):
@@ -289,13 +319,13 @@ def compute_sense_rhs(kspace_data, sensitivity_maps):
 # ### Algorithm (Hestenes & Stiefel, 1952):
 #
 # ```
-# x₀ = 0, r₀ = b, p₀ = r₀
+# x_0 = 0, r_0 = b, p_0 = r_0
 # for k = 0, 1, 2, ...:
-#     αₖ = (rₖ^H rₖ) / (pₖ^H A pₖ)
-#     x_{k+1} = xₖ + αₖ pₖ
-#     r_{k+1} = rₖ - αₖ A pₖ
-#     βₖ = (r_{k+1}^H r_{k+1}) / (rₖ^H rₖ)
-#     p_{k+1} = r_{k+1} + βₖ pₖ
+#     alpha_k = (r_k^H r_k) / (p_k^H A p_k)
+#     x_{k+1} = x_k + alpha_k p_k
+#     r_{k+1} = r_k - alpha_k A p_k
+#     beta_k = (r_{k+1}^H r_{k+1}) / (r_k^H r_k)
+#     p_{k+1} = r_{k+1} + beta_k p_k
 # ```
 #
 # The inner product for complex vectors is $\langle u, v \rangle = u^H v = \sum \overline{u_j} v_j$.
@@ -303,23 +333,28 @@ def compute_sense_rhs(kspace_data, sensitivity_maps):
 # %%
 def conjugate_gradient_sense(kspace_data, sensitivity_maps, mask,
                               x0=None, max_iter=50, tol=1e-6,
-                              lambda_reg=0.0):
+                              lambda_reg=0.0, x_true=None):
     """
     Solve the SENSE inverse problem using Conjugate Gradient.
 
-    Solves: (A_norm + λ I) x = b
+    Solves: (A_norm + lambda I) x = b
 
     where:
     - A_norm = sum_i S_i^H F^H M F S_i  (the SENSE normal operator)
     - b = sum_i S_i^H F^H y_i           (the right-hand side)
-    - λ ≥ 0 is an optional Tikhonov regularization parameter
+    - lambda >= 0 is an optional Tikhonov regularization parameter
 
     This is a hand-written CG implementation that uses matrix-free
     operator application via FFTs.
 
+    Parameters:
+    - x_true: optional ground truth for tracking true reconstruction error
+
     Returns:
     - x: reconstructed image
     - residual_norms: list of residual norms at each iteration
+    - true_errors: list of relative true errors (NRMSE) at each iteration
+                   (only if x_true is provided)
     """
     N = kspace_data[0].shape[0]
 
@@ -332,7 +367,7 @@ def conjugate_gradient_sense(kspace_data, sensitivity_maps, mask,
     else:
         x = x0.copy()
 
-    # Define the operator A_λ = A_norm + λ I
+    # Define the operator A_lambda = A_norm + lambda I
     def apply_A(v):
         """Apply the regularized normal operator to v."""
         Av = apply_sense_normal_operator(v, sensitivity_maps, mask)
@@ -345,10 +380,17 @@ def conjugate_gradient_sense(kspace_data, sensitivity_maps, mask,
     p = r.copy()          # first search direction
     residual_norms = [np.sqrt(np.real(np.sum(np.conj(r) * r)))]
 
+    # Track true reconstruction error if ground truth is provided
+    if x_true is not None:
+        true_norm = np.linalg.norm(x_true)
+        true_errors = [np.linalg.norm(np.abs(x) - x_true) / true_norm]
+    else:
+        true_errors = []
+
     for k in range(max_iter):
         Ap = apply_A(p)
 
-        # Step size α = (r^H r) / (p^H A p)
+        # Step size alpha = (r^H r) / (p^H A p)
         r_norm_sq = np.real(np.sum(np.conj(r) * r))
         pAp = np.real(np.sum(np.conj(p) * Ap))
 
@@ -366,16 +408,21 @@ def conjugate_gradient_sense(kspace_data, sensitivity_maps, mask,
         res_norm = np.sqrt(np.real(np.sum(np.conj(r_new) * r_new)))
         residual_norms.append(res_norm)
 
+        # Track true error if ground truth available
+        if x_true is not None:
+            err = np.linalg.norm(np.abs(x) - x_true) / true_norm
+            true_errors.append(err)
+
         if res_norm / residual_norms[0] < tol:
             print(f"  CG converged at iteration {k+1}, "
                   f"residual relative = {res_norm/residual_norms[0]:.2e}")
             break
 
-        # β = (r_{k+1}^H r_{k+1}) / (r_k^H r_k)
+        # beta = (r_{k+1}^H r_{k+1}) / (r_k^H r_k)
         r_new_norm_sq = np.real(np.sum(np.conj(r_new) * r_new))
         beta = r_new_norm_sq / r_norm_sq
 
-        # Update search direction: p_{k+1} = r_{k+1} + β p_k
+        # Update search direction: p_{k+1} = r_{k+1} + beta p_k
         p = r_new + beta * p
         r = r_new
 
@@ -383,7 +430,7 @@ def conjugate_gradient_sense(kspace_data, sensitivity_maps, mask,
         print(f"  CG reached max_iter={max_iter}, "
               f"residual relative = {residual_norms[-1]/residual_norms[0]:.2e}")
 
-    return x, np.array(residual_norms)
+    return x, np.array(residual_norms), np.array(true_errors)
 
 # %% [markdown]
 # ## 7. Run the Full Pipeline
@@ -394,8 +441,9 @@ N = 128          # image size (N×N pixels)
 n_coils = 6      # number of receiver coils
 R = 3            # acceleration factor (1=fully sampled, >1=undersampled)
 noise_std = 0.01  # complex Gaussian noise standard deviation
-max_cg_iter = 40
+max_cg_iter = 60  # increased from 40 to allow convergence
 lambda_reg = 1e-3  # small Tikhonov regularization
+random_seed = 42   # for reproducibility
 
 print("=" * 60)
 print("Multi-Coil MRI Reconstruction via SENSE + Conjugate Gradient")
@@ -416,16 +464,25 @@ print("2. Generating coil sensitivity maps...")
 sens_maps = generate_coil_sensitivity_maps(N, n_coils)
 print(f"   Each map shape: {sens_maps[0].shape}")
 
-# Step 3: Simulate acquisition
+# Step 3: Simulate acquisition (seeded for reproducibility)
 print("3. Simulating undersampled k-space acquisition...")
 mask = cartesian_undersampling_mask(N, R)
 kspace_data, kspace_full = simulate_acquisition(phantom, sens_maps, mask,
-                                                  noise_std=noise_std)
+                                                  noise_std=noise_std,
+                                                  seed=random_seed)
 undersampling_ratio = np.sum(mask) / mask.size
 print(f"   Undersampling: {undersampling_ratio:.1%} of k-space acquired")
 
-# Step 4: Zero-filled reconstruction (baseline)
-print("4. Computing zero-filled reconstruction...")
+# Step 4a: Naive SoS reconstruction (simplest baseline)
+print("4a. Computing naive sum-of-squares reconstruction...")
+t0 = time.time()
+recon_sos = naive_sos_reconstruction(kspace_data)
+t_sos = time.time() - t0
+error_sos = np.linalg.norm(recon_sos - phantom) / np.linalg.norm(phantom)
+print(f"   Time: {t_sos:.3f}s, NRMSE: {error_sos:.4f}")
+
+# Step 4b: Zero-filled with sensitivity weighting (baseline)
+print("4b. Computing zero-filled reconstruction (with sensitivity weighting)...")
 t0 = time.time()
 recon_zf = zero_filled_reconstruction(kspace_data, sens_maps)
 t_zf = time.time() - t0
@@ -436,9 +493,10 @@ print(f"   Time: {t_zf:.3f}s, NRMSE: {error_zf:.4f}")
 print("5. Running Conjugate Gradient reconstruction...")
 x0 = recon_zf.copy()  # start from zero-filled solution
 t0 = time.time()
-recon_cg, cg_residuals = conjugate_gradient_sense(
+recon_cg, cg_residuals, cg_true_errors = conjugate_gradient_sense(
     kspace_data, sens_maps, mask,
-    x0=x0, max_iter=max_cg_iter, tol=1e-6, lambda_reg=lambda_reg
+    x0=x0, max_iter=max_cg_iter, tol=1e-4, lambda_reg=lambda_reg,
+    x_true=phantom
 )
 t_cg = time.time() - t0
 
@@ -453,12 +511,12 @@ print(f"   CG iterations: {len(cg_residuals)-1}")
 
 # %%
 # --- Figure 1: Reconstruction Comparison ---
-fig, axes = plt.subplots(2, 4, figsize=(20, 10))
+fig, axes = plt.subplots(2, 5, figsize=(24, 10))
 
 # Original phantom
 ax = axes[0, 0]
 im = ax.imshow(phantom, cmap='gray', origin='lower')
-ax.set_title('Original Phantom\n(Ground Truth)', fontsize=12, fontweight='bold')
+ax.set_title('Original Phantom\n(Ground Truth)', fontsize=11, fontweight='bold')
 ax.axis('off')
 plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
@@ -468,44 +526,53 @@ for c in range(min(4, n_coils)):
     col = 1 + (c % 2)
     ax = axes[row, col]
     im = ax.imshow(np.abs(sens_maps[c]), cmap='viridis', origin='lower')
-    ax.set_title(f'Coil {c+1} Sensitivity\n$|s_{c+1}(r)|$', fontsize=11)
+    ax.set_title(r'Coil %d Sensitivity\n$|s_{%d}(r)|$' % (c+1, c+1), fontsize=10)
     ax.axis('off')
 
-# Zero-filled reconstruction
+# Naive SoS reconstruction
 ax = axes[1, 0]
+im = ax.imshow(recon_sos, cmap='gray', origin='lower')
+ax.set_title(r'Naive SoS IFFT\\NRMSE=%.3f\\No sens. info, heavy shading' % error_sos,
+             fontsize=10)
+ax.axis('off')
+plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+
+# Zero-filled reconstruction (sensitivity-weighted)
+ax = axes[1, 1]
 im = ax.imshow(np.abs(recon_zf), cmap='gray', origin='lower')
-ax.set_title(f'Zero-Filled IFFT\n(R={R}, NRMSE={error_zf:.3f})\nAliasing artifacts',
-             fontsize=11)
+ax.set_title(r'Zero-Filled IFFT\\R=%d, NRMSE=%.3f\\Sens.-weighted, aliasing' % (R, error_zf),
+             fontsize=10)
 ax.axis('off')
 plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
 # CG reconstruction
-ax = axes[1, 1]
+ax = axes[1, 2]
 im = ax.imshow(recon_cg_mag, cmap='gray', origin='lower')
-ax.set_title(f'CG Reconstruction\n(R={R}, NRMSE={error_cg:.3f})\nAliasing removed',
-             fontsize=11)
+ax.set_title(r'CG Reconstruction\\R=%d, NRMSE=%.3f\\Aliasing removed' % (R, error_cg),
+             fontsize=10)
 ax.axis('off')
 plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
 # Undersampling mask
-ax = axes[1, 2]
+ax = axes[1, 3]
 ax.imshow(mask, cmap='gray', origin='lower')
-ax.set_title(f'Undersampling Mask\n(R={R}, {undersampling_ratio:.0%} acquired)',
-             fontsize=11)
+ax.set_title(r'Undersampling Mask\\R=%d, %.0f%% acquired' % (R, undersampling_ratio*100),
+             fontsize=10)
 ax.axis('off')
 
 # Error map (difference between CG and original)
-ax = axes[1, 3]
+ax = axes[1, 4]
 error_map = np.abs(recon_cg_mag - phantom)
 im = ax.imshow(error_map, cmap='hot', origin='lower')
-ax.set_title(f'Error Map\n$\\|x_{{\\rm CG}}\\| - x_{{\\rm true}}$',
-             fontsize=11)
+ax.set_title(r'Error Map\\$|x_{\rm CG}| - x_{\rm true}$',
+             fontsize=10)
 ax.axis('off')
 plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
 plt.suptitle('Multi-Coil MRI Reconstruction: SENSE + Conjugate Gradient\n'
-             f'{N}×{N} pixels, {n_coils} coils, R={R}, CG iter={len(cg_residuals)-1}',
-             fontsize=15, y=1.01)
+             r'%d×%d pixels, %d coils, R=%d, CG iter=%d' % (
+                 N, N, n_coils, R, len(cg_residuals)-1),
+             fontsize=14, y=1.01)
 plt.tight_layout()
 
 outpath1 = os.path.join(fig_dir, 'mri_reconstruction_results.pdf')
@@ -513,28 +580,49 @@ plt.savefig(outpath1, dpi=150, bbox_inches='tight')
 print(f"Saved: {outpath1}")
 plt.show()
 
-# --- Figure 2: CG Convergence ---
+# --- Figure 2: CG Convergence AND Semiconvergence ---
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
 
-# Residual norm vs iteration
+# Left: Residual norm vs iteration (always decreasing)
 ax1.semilogy(cg_residuals, 'o-', color='#3498db', linewidth=2,
              markersize=5, markerfacecolor='white', markeredgewidth=2)
-ax1.set_xlabel('Iteration $k$', fontsize=12)
+ax1.set_xlabel(r'Iteration $k$', fontsize=12)
 ax1.set_ylabel(r'Residual $\|r_k\|_2$', fontsize=12)
-ax1.set_title('CG Residual Norm vs Iteration', fontsize=13)
+ax1.set_title('CG Residual Norm\n(always decreases)', fontsize=13)
 ax1.grid(True, alpha=0.3, which='both')
 
-# Relative residual
-rel_res = cg_residuals / cg_residuals[0]
-ax2.semilogy(rel_res, 'o-', color='#e74c3c', linewidth=2,
-             markersize=5, markerfacecolor='white', markeredgewidth=2)
-ax2.set_xlabel('Iteration $k$', fontsize=12)
-ax2.set_ylabel(r'Relative Residual $\|r_k\|_2 / \|r_0\|_2$', fontsize=12)
-ax2.set_title('CG Relative Residual (Semilog)', fontsize=13)
-ax2.grid(True, alpha=0.3, which='both')
+# Right: True reconstruction error vs iteration (semiconvergence!)
+# Plot both residual and true error on the same axes for comparison
+if len(cg_true_errors) > 0:
+    # Relative residual (for comparison with true error)
+    rel_res = cg_residuals / cg_residuals[0]
 
-plt.suptitle('Conjugate Gradient Convergence for SENSE Reconstruction',
-             fontsize=14, y=1.02)
+    color_err = '#e74c3c'
+    color_res = '#3498db'
+
+    ax2.semilogy(cg_true_errors, 's-', color=color_err, linewidth=2,
+                 markersize=5, markerfacecolor='white', markeredgewidth=2,
+                 label=r'True error $\| |x_k| - x_{\rm true}\|_2 / \|x_{\rm true}\|_2$')
+    ax2.semilogy(rel_res, 'o-', color=color_res, linewidth=2,
+                 markersize=5, markerfacecolor='white', markeredgewidth=2,
+                 label=r'Relative residual $\|r_k\|_2 / \|r_0\|_2$')
+
+    # Highlight the minimum-error iteration
+    if len(cg_true_errors) > 0:
+        best_iter = np.argmin(cg_true_errors)
+        ax2.axvline(x=best_iter, color='gray', linestyle='--', alpha=0.7,
+                    label=f'Min error at k={best_iter}')
+
+    ax2.set_xlabel(r'Iteration $k$', fontsize=12)
+    ax2.set_ylabel('Relative Norm', fontsize=12)
+    ax2.set_title(r'Semiconvergence: Residual $\neq$ Error',
+                  fontsize=13)
+    ax2.legend(fontsize=8, loc='center left')
+    ax2.grid(True, alpha=0.3, which='both')
+
+plt.suptitle('Conjugate Gradient Convergence for SENSE Reconstruction\n'
+             'The residual always decreases, but the true error can plateau or increase!',
+             fontsize=13, y=1.02)
 plt.tight_layout()
 
 outpath2 = os.path.join(fig_dir, 'mri_cg_convergence.pdf')
@@ -547,7 +635,7 @@ fig, axes = plt.subplots(2, 3, figsize=(14, 9))
 for c in range(n_coils):
     ax = axes[c // 3, c % 3]
     im = ax.imshow(np.abs(sens_maps[c]), cmap='viridis', origin='lower')
-    ax.set_title(f'Coil {c+1} Magnitude', fontsize=11)
+    ax.set_title('Coil %d Magnitude' % (c+1), fontsize=11)
     ax.axis('off')
     plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
