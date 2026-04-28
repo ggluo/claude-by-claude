@@ -1,4 +1,4 @@
-# run-lecture-prep.sh — Student/Teacher Agent Workflow for Lecture Generation
+# create-slides.sh — Student/Teacher Agent Workflow for Lecture Generation
 
 A shell script that orchestrates two Claude agents in an iterative feedback loop to produce lecture slides and course materials. The **Student** agent creates and improves materials, the **Teacher** agent reviews them and provides feedback. This repeats for 3 rounds.
 
