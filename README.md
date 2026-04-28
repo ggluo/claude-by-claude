@@ -118,6 +118,6 @@ materials/
 
 ## Requirements
 
-- [Claude Code](https://claude.com/claude-code) CLI (must be logged in: `claude login`)
+- [Claude Code](https://claude.com/claude-code) CLI (must be logged in: `claude login` or use third party api, this work is done by deepseek v4 api)
 - `pdflatex` with Beamer, TikZ, amsmath, bm packages
 - Python 3.10+ with numpy, scipy, matplotlib (for running the generated code)
