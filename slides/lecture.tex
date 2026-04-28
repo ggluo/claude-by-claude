@@ -186,10 +186,10 @@
     \centering
     In 2D, $f(x) = \frac{1}{2}x^T A x - b^T x$ is a \textbf{paraboloid} (bowl).
 
-    \vspace{0.3cm}
-    \includegraphics[width=0.65\textwidth]{figures/paraboloid_contours.pdf}
+    \vspace{0.2cm}
+    \includegraphics[width=0.52\textwidth]{figures/paraboloid_contours.pdf}
 
-    \vspace{0.3cm}
+    \vspace{0.2cm}
     \begin{itemize}
         \item The level sets (contours of constant $f$) are \textbf{ellipses}
               whose shape is determined by the eigenvalues of $A$
@@ -210,7 +210,7 @@
     \]
 
     \pause
-    \vspace{0.2cm}
+    \vspace{0.10cm}
     Expand the squared norm step by step:
     \begin{align*}
         \|A x - b\|_2^2 &= (Ax - b)^T (Ax - b) \\
@@ -218,23 +218,27 @@
         \onslide<4->{&= x^T A^T A x - 2 b^T A x + b^T b}
     \end{align*}
 
-    \pause\pause
-    \vspace{0.2cm}
+    \onslide<5->{
+    \vspace{0.10cm}
     Take the gradient and set to zero $\Rightarrow$ \textbf{normal equations}:
     \[
         A^T A \, x = A^T b
     \]
+    }
 
-    \vspace{0.2cm}
+    \onslide<6->{
+    \vspace{0.10cm}
     \begin{block}{Key property}
         $A^T A$ is always symmetric positive \emph{semidefinite}.
         If $A$ has full column rank, $A^T A$ is SPD --- we can use CG!
     \end{block}
+    }
 
-    \pause
-    \vspace{0.2cm}
+    \onslide<7->{
+    \vspace{0.10cm}
     Later, we will use exactly this structure to formulate the \textbf{multi-coil MRI}
     reconstruction as a least-squares problem and solve it efficiently with CG.
+    }
 \end{frame}
 
 % ===========================================================================
@@ -245,8 +249,8 @@
 \begin{frame}{Steepest Descent: The Natural First Attempt}
     \textbf{Idea:} At each step, move in the direction where $f$ decreases fastest.
 
-    \vspace{0.3cm}
-    {\small
+    \vspace{0.2cm}
+    {\footnotesize
     \begin{algorithm}[H]
         \caption{Steepest Descent for $Ax = b$}
         \begin{algorithmic}[1]
@@ -262,7 +266,7 @@
     }
 
     \pause
-    \vspace{0.2cm}
+    \vspace{0.15cm}
     \begin{itemize}
         \item \textbf{Line search:} $\alpha_k$ minimizes $f(x_k + \alpha r_k)$ exactly
         \item Each step is orthogonal to the \emph{previous} step: $r_{k+1}^T r_k = 0$
@@ -272,9 +276,13 @@
 
 \begin{frame}{Why Steepest Descent is Slow}
     \centering
-    \includegraphics[width=0.7\textwidth]{figures/steepest_descent_vs_cg.pdf}
+    % NOTE: We show ONLY the SD trajectory here. CG is not introduced until
+    % Section 4, so showing the CG path now would confuse students with an
+    % unexplained blue trajectory. The full SD+CG comparison figure
+    % (steepest_descent_vs_cg.pdf) is used later, after CG is introduced.
+    \includegraphics[width=0.52\textwidth]{figures/sd_zigzag_only.pdf}
 
-    \vspace{0.2cm}
+    \vspace{0.15cm}
     \begin{itemize}
         \item Steepest descent \textbf{zigzags} along the narrow valley
         \item Each step undoes some progress of the previous step
@@ -282,13 +290,13 @@
     \end{itemize}
 
     \pause
-    \vspace{0.3cm}
+    \vspace{0.15cm}
     Recall the \textbf{$A$-norm} (energy norm): $\|v\|_A = \sqrt{v^T A v}$.
     \\
     This measures ``error weighted by the system matrix'' --- directions
     corresponding to large eigenvalues are penalized more.
 
-    \vspace{0.2cm}
+    \vspace{0.10cm}
     \begin{block}{Error bound for steepest descent (in $A$-norm)}
         \[
             \frac{\|x_k - x^*\|_A}{\|x_0 - x^*\|_A}
@@ -298,17 +306,17 @@
     \end{block}
 \end{frame}
 
-\begin{frame}{The Zigzag Problem Visualized}
+\begin{frame}{Convergence Speed: SD vs CG}
     \centering
-    \includegraphics[width=0.65\textwidth]{figures/sd_vs_cg_error.pdf}
+    \includegraphics[width=0.50\textwidth]{figures/sd_vs_cg_error.pdf}
 
-    \vspace{0.3cm}
+    \vspace{0.2cm}
     \textbf{The fundamental issue:} Steepest descent uses the \emph{gradient} as
     search direction, but gradient directions are not independent --- they
     interfere with each other.
 
     \pause
-    \vspace{0.3cm}
+    \vspace{0.2cm}
     \begin{block}{What if we chose search directions that \emph{don't} interfere?}
         This is exactly the idea behind the \textbf{Conjugate Gradient} method.
     \end{block}
@@ -326,12 +334,12 @@
         u^T A v = 0
     \]
 
-    \vspace{0.3cm}
+    \vspace{0.2cm}
     \textbf{Geometric meaning:} Under the $A$-inner product $\langle u, v \rangle_A = u^T A v$,
     conjugate directions are orthogonal.
 
     \pause
-    \vspace{0.3cm}
+    \vspace{0.2cm}
     \textbf{Why this matters:}
     \begin{itemize}
         \item If we have $n$ mutually $A$-orthogonal directions $\{p_0, \ldots, p_{n-1}\}$,
@@ -341,7 +349,7 @@
     \end{itemize}
 
     \pause
-    \vspace{0.3cm}
+    \vspace{0.2cm}
     \textbf{But how do we find these directions efficiently?}\\
     We don't want to compute all $n$ directions upfront ($O(n^3)$) --- that defeats the purpose!
 \end{frame}
@@ -350,18 +358,18 @@
     \textbf{CG's key idea:} Generate conjugate directions sequentially,
     one per iteration, using only the current residual.
 
-    \vspace{0.3cm}
+    \vspace{0.2cm}
     \textbf{The recurrence:}
     \begin{align*}
-        p_0 &= r_0 = b - A x_0 \\[0.3cm]
+        p_0 &= r_0 = b - A x_0 \\[0.2cm]
         p_{k+1} &= r_{k+1} + \beta_k p_k
     \end{align*}
 
-    \vspace{0.2cm}
+    \vspace{0.15cm}
     where $\beta_k = \dfrac{r_{k+1}^T r_{k+1}}{r_k^T r_k}$ ensures $p_{k+1}^T A p_k = 0$.
 
     \pause
-    \vspace{0.3cm}
+    \vspace{0.2cm}
     \textbf{Properties of CG (what makes it beautiful):}
     \begin{enumerate}
         \item The residuals $r_0, r_1, \ldots$ are mutually orthogonal: $r_i^T r_j = 0$ for $i \neq j$
@@ -373,7 +381,7 @@
 \end{frame}
 
 \begin{frame}{CG Algorithm}
-    {\small
+    {\scriptsize
     \begin{algorithm}[H]
         \caption{Conjugate Gradient (Hestenes \& Stiefel, 1952)}
         \begin{algorithmic}[1]
@@ -396,7 +404,7 @@
     \end{algorithm}
     }
 
-    \vspace{0.2cm}
+    \vspace{0.10cm}
     \begin{itemize}
         \item \textbf{Cost per iteration:} one $A p_k$, two inner products, three vector updates
         \item \textbf{Memory:} only need $x, r, p, Ap$ --- four vectors
@@ -410,7 +418,7 @@
         \mathcal{K}_k(A, b) = \operatorname{span}\{b, Ab, A^2 b, \ldots, A^{k-1} b\}
     \]
 
-    \vspace{0.2cm}
+    \vspace{0.15cm}
     \textbf{CG chooses $x_k$ to be the \emph{optimal} solution within $\mathcal{K}_k$:}
     \[
         x_k = \arg\min_{x \in x_0 + \mathcal{K}_k} \|x - x^*\|_A
@@ -418,7 +426,7 @@
     where $\|v\|_A = \sqrt{v^T A v}$ is the \emph{$A$-norm} (energy norm).
 
     \pause
-    \vspace{0.3cm}
+    \vspace{0.2cm}
     \textbf{Three equivalent views of CG (they all describe the same thing):}
     \begin{enumerate}
         \item An algorithm that generates $A$-orthogonal search directions
@@ -426,7 +434,7 @@
         \item An algorithm that orthogonalizes the residuals via Lanczos
     \end{enumerate}
 
-    \vspace{0.2cm}
+    \vspace{0.15cm}
     \begin{block}{Finite termination}
         In exact arithmetic, CG finds $x^*$ in at most $n$ iterations.
         In practice, we stop much earlier --- the approximation is already excellent.
@@ -453,7 +461,7 @@
     where $\kappa = \kappa(A) = \lambda_{\max} / \lambda_{\min}$.
 
     \pause
-    \vspace{0.3cm}
+    \vspace{0.2cm}
     \begin{alertblock}{CG replaces $\kappa$ with $\sqrt{\kappa}$ --- a dramatic improvement!}
         \begin{tabular}{c|c|c}
             $\kappa$ & SD factor/iter & CG factor/iter \\
@@ -466,7 +474,7 @@
     \end{alertblock}
 
     \pause
-    \vspace{0.3cm}
+    \vspace{0.2cm}
     \begin{block}{Practical consequence: Preconditioning}
         Replace $Ax = b$ with $M^{-1}Ax = M^{-1}b$,
         where $M \approx A$ but $M^{-1}$ is easy to apply.
@@ -479,11 +487,11 @@
     Real convergence depends on the \textbf{distribution} of eigenvalues.
     \textbf{CG typically converges much faster than the bound predicts!}
 
-    \vspace{0.2cm}
+    \vspace{0.15cm}
     \centering
-    \includegraphics[width=0.85\textwidth]{figures/eigenvalue_illustration.pdf}
+    \includegraphics[width=0.72\textwidth]{figures/eigenvalue_illustration.pdf}
 
-    \vspace{0.2cm}
+    \vspace{0.15cm}
     \begin{itemize}
         \item \textbf{Left:} Uniform eigenvalues in $[1, 100]$ --- slow convergence
         \item \textbf{Right:} $n-5$ eigenvalues in $[1, 2]$, 5 in $[95, 100]$ --- fast convergence
@@ -508,7 +516,7 @@
     \end{itemize}
 
     \pause
-    \vspace{0.3cm}
+    \vspace{0.2cm}
     \textbf{Preconditioning strategies for CG:}
     \begin{itemize}
         \item \textbf{Jacobi (diagonal):} $M = \operatorname{diag}(A)$ --- simple, sometimes effective
@@ -527,7 +535,7 @@
     \textbf{Magnetic Resonance Imaging} measures the signal from excited protons
     in a strong magnetic field.
 
-    \vspace{0.2cm}
+    \vspace{0.15cm}
     \begin{columns}[T]
         \column{0.55\textwidth}
         \begin{itemize}
@@ -559,7 +567,7 @@
         \end{tikzpicture}
     \end{columns}
 
-    \vspace{0.2cm}
+    \vspace{0.15cm}
     \pause
     \begin{alertblock}{The speed problem}
         To form an image, we must sample k-space line by line.
@@ -571,19 +579,30 @@
 \begin{frame}{Multi-Coil Acquisition: The Key to Acceleration}
     Modern MRI scanners use \textbf{arrays of receiver coils} placed around the patient.
 
-    \vspace{0.3cm}
+    \vspace{0.15cm}
     \centering
-    \includegraphics[width=0.7\textwidth]{figures/mri_acquisition_model.pdf}
+    \includegraphics[width=0.52\textwidth]{figures/mri_acquisition_model.pdf}
 
-    \vspace{0.3cm}
-    \begin{itemize}
-        \item Each coil $i$ has a \textbf{sensitivity profile} $s_i(\mathbf{r})$ ---
-              it sees the object differently depending on position
-        \item Coil sensitivities provide \emph{spatial encoding} that can replace
-              some gradient encoding steps
-        \item This allows us to \textbf{undersample} k-space (skip lines)
-              and still recover the image $\to$ faster scans!
-    \end{itemize}
+    \vspace{0.15cm}
+    \begin{columns}[T]
+        \column{0.65\textwidth}
+        \begin{itemize}
+            \item Each coil $i$ has a \textbf{sensitivity profile} $s_i(\mathbf{r})$ ---
+                  it sees the object differently depending on position
+            \item Coil sensitivities provide \emph{spatial encoding} that can replace
+                  some gradient encoding steps
+            \item This allows us to \textbf{undersample} k-space (skip lines)
+                  and still recover the image $\to$ faster scans!
+        \end{itemize}
+
+        \column{0.35\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/coil_sensitivity_maps.pdf}
+
+        \vspace{0.1cm}
+        {\footnotesize Example coil sensitivity\\
+        magnitudes (6 coils)}
+    \end{columns}
 \end{frame}
 
 \begin{frame}{The SENSE Model (Pruessmann et al., 1999)}
@@ -592,7 +611,7 @@
         y_i = M \mathcal{F} \{ s_i \odot x \} + \eta_i, \qquad i = 1, \ldots, C
     \]
 
-    \vspace{0.2cm}
+    \vspace{0.15cm}
     \begin{itemize}
         \item $x \in \C^N$: unknown image (flattened)
         \item $s_i \in \C^N$: coil sensitivity map (diagonal operator $S_i$)
@@ -603,7 +622,7 @@
     \end{itemize}
 
     \pause
-    \vspace{0.3cm}
+    \vspace{0.2cm}
     \textbf{The SENSE inverse problem (least squares):}
     \[
         \min_x \; \sum_{i=1}^{C} \big\| M \mathcal{F} S_i x - y_i \big\|_2^2
@@ -621,7 +640,7 @@
         \underbrace{\sum_{i=1}^{C} S_i^H \mathcal{F}^H y_i}_{b}
     \]
 
-    \vspace{0.2cm}
+    \vspace{0.15cm}
     \textbf{Step 2: Apply $A_{\text{norm}}$ implicitly via FFTs}\\
     For any vector $v$, compute $A_{\text{norm}} v$ without forming the matrix:
     \begin{enumerate}
@@ -629,7 +648,7 @@
         \item Sum over all coils
     \end{enumerate}
 
-    \vspace{0.2cm}
+    \vspace{0.15cm}
     \textbf{Step 3: Ensure positive definiteness}\\
     $A_{\text{norm}}$ is Hermitian positive \emph{semidefinite}. With aggressive
     undersampling, its nullspace may contain nonzero vectors, causing CG to break
@@ -641,7 +660,7 @@
     positive definite with only a small bias cost.
 
     \pause
-    \vspace{0.2cm}
+    \vspace{0.15cm}
     \begin{block}{Why CG works here}
         The coil sensitivities provide the ``missing'' spatial information
         that was lost by skipping k-space lines. CG efficiently finds the image
@@ -651,9 +670,9 @@
 
 \begin{frame}{Reconstruction Results: Zero-Filled vs CG}
     \centering
-    \includegraphics[width=0.9\textwidth]{figures/mri_reconstruction_results.pdf}
+    \includegraphics[width=0.78\textwidth]{figures/mri_reconstruction_results.pdf}
 
-    \vspace{0.2cm}
+    \vspace{0.15cm}
     \begin{itemize}
         \item \textbf{Zero-filled IFFT:} Fast but shows severe aliasing artifacts
               (overlapping replicas from undersampling)
@@ -665,9 +684,9 @@
 
 \begin{frame}{CG Convergence and Semiconvergence}
     \centering
-    \includegraphics[width=0.85\textwidth]{figures/mri_cg_convergence.pdf}
+    \includegraphics[width=0.72\textwidth]{figures/mri_cg_convergence.pdf}
 
-    \vspace{0.3cm}
+    \vspace{0.2cm}
     \begin{itemize}
         \item Residual drops rapidly in the first few iterations
         \item After $\sim$15 iterations, we're close to the true image
@@ -713,7 +732,7 @@
               positive definiteness and controls noise amplification.
     \end{enumerate}
 
-    \vspace{0.3cm}
+    \vspace{0.2cm}
     \begin{block}{CG is everywhere}
         CG is one of the most widely used algorithms in scientific computing ---
         from PDE solvers to optimization (nonlinear CG) to machine learning
@@ -730,7 +749,7 @@
               \textit{Magn. Reson. Med.}
     \end{itemize}
 
-    \vspace{0.3cm}
+    \vspace{0.2cm}
     \textbf{Textbooks:}
     \begin{itemize}
         \item Trefethen \& Bau (1997). \textit{Numerical Linear Algebra}. SIAM.
@@ -739,7 +758,7 @@
               Without the Agonizing Pain.'' (free online --- highly recommended!)
     \end{itemize}
 
-    \vspace{0.3cm}
+    \vspace{0.2cm}
     \textbf{Code for this lecture:}
     \begin{itemize}
         \item \texttt{code/illustrations/} --- Python scripts that generate the figures

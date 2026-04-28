@@ -21,14 +21,18 @@ os.makedirs(fig_dir, exist_ok=True)
 # ## Theoretical Bound
 #
 # For Conjugate Gradient applied to $A x = b$ with $A$ SPD, the error in the
-# $A$-norm satisfies:
+# **$A$-norm** satisfies:
 #
 # $$\frac{\|x_k - x^*\|_A}{\|x_0 - x^*\|_A} \leq
 #   2\left(\frac{\sqrt{\kappa} - 1}{\sqrt{\kappa} + 1}\right)^k$$
 #
 # where $\kappa = \lambda_{\max} / \lambda_{\min}$ is the condition number.
 #
-# However, if eigenvalues are well-clustered, CG can converge *much faster*
+# **IMPORTANT:** This bound is for the *A-norm error*, NOT the residual norm.
+# The A-norm error $\|x_k - x^*\|_A = \sqrt{(x_k - x^*)^T A (x_k - x^*)}$
+# measures energy-weighted distance to the solution.
+#
+# If eigenvalues are well-clustered, CG can converge *much faster*
 # than this worst-case bound.
 
 # %%
@@ -73,43 +77,69 @@ A2 = build_spd_matrix(lambda2, seed=42)  # clustered eigenvalues
 
 # %% [markdown]
 # ## Conjugate Gradient Implementation
+#
+# This implementation tracks BOTH the residual norm AND the A-norm error
+# so we can compare the theoretical bound against the correct quantity.
 
 # %%
 def conjugate_gradient(A, b, max_iter=100, tol=1e-10):
-    """CG for Ax = b with A SPD. Returns residual norm history."""
+    """
+    CG for Ax = b with A SPD.
+
+    Returns:
+    - residuals: residual norm ||r_k|| at each iteration
+    - a_norm_errors: A-norm error ||x_k - x*||_A at each iteration
+      (the quantity the theoretical bound actually applies to)
+    """
     n = len(b)
+    # Ground truth solution for A-norm error computation
+    x_star = np.linalg.solve(A, b)
+    A_norm_initial_sq = (x_star) @ A @ (x_star)  # since x0 = 0
+
     x = np.zeros(n)
     r = b.copy()
     p = r.copy()
-    residuals = [np.linalg.norm(r)]  # residual norm
+    residuals = [np.linalg.norm(r)]
+    a_norm_errors = [np.sqrt(A_norm_initial_sq)]  # ||0 - x*||_A = sqrt(x*^T A x*)
 
     for k in range(max_iter):
         Ap = A @ p
         alpha = (r @ r) / (p @ Ap)
         x = x + alpha * p
         r_new = r - alpha * Ap
+
+        # Residual norm
         residuals.append(np.linalg.norm(r_new))
+
+        # A-norm error: ||x_k - x*||_A
+        err = x - x_star
+        a_norm_err = np.sqrt(err @ A @ err)
+        a_norm_errors.append(a_norm_err)
+
         if residuals[-1] < tol:
             break
+
         beta = (r_new @ r_new) / (r @ r)
         p = r_new + beta * p
         r = r_new
 
-    return np.array(residuals)
+    return np.array(residuals), np.array(a_norm_errors)
 
 # %%
 # Random right-hand side
-b1 = np.random.randn(n)
+rng = np.random.default_rng(42)
+b1 = rng.standard_normal(n)
 b2 = b1.copy()  # same b for fair comparison
 
-residuals1 = conjugate_gradient(A1, b1, max_iter=80)
-residuals2 = conjugate_gradient(A2, b2, max_iter=80)
+residuals1, a_errs1 = conjugate_gradient(A1, b1, max_iter=80)
+residuals2, a_errs2 = conjugate_gradient(A2, b2, max_iter=80)
 
 # Also compute the theoretical bound for comparison
+# NOTE: This bound applies to the A-norm error, NOT the residual.
 sqrt_kappa = np.sqrt(kappa)
 bound_factor = (sqrt_kappa - 1) / (sqrt_kappa + 1)
-k_vals = np.arange(len(residuals1))
-theory_bound = 2 * bound_factor**k_vals * residuals1[0]
+k_vals = np.arange(len(a_errs1))
+theory_bound = 2 * bound_factor**k_vals * a_errs1[0]
 
 # %% [markdown]
 # ## Plot: Eigenvalue Distributions and Convergence Curves
@@ -143,37 +173,38 @@ ax.set_title(r'Clustered Eigenvalue Distribution\\$(\kappa = 100)$', fontsize=13
 ax.set_ylim(0, 1.5)
 ax.grid(True, alpha=0.3)
 
-# --- Convergence: semilog plot ---
+# --- Convergence: A-norm error (semilog plot) ---
 ax = axes[1, 0]
-ax.semilogy(residuals1 / residuals1[0], linewidth=2, color='#e74c3c',
+ax.semilogy(a_errs1 / a_errs1[0], linewidth=2, color='#e74c3c',
             label='Uniform eigenvalues')
-ax.semilogy(residuals2 / residuals2[0], linewidth=2, color='#3498db',
+ax.semilogy(a_errs2 / a_errs2[0], linewidth=2, color='#3498db',
             label='Clustered eigenvalues')
-ax.semilogy(theory_bound / residuals1[0], '--', linewidth=1.5, color='gray',
-            label='Worst-case bound')
+ax.semilogy(theory_bound / a_errs1[0], '--', linewidth=1.5, color='gray',
+            label=r'Worst-case bound $2\left(\frac{\sqrt{\kappa}-1}{\sqrt{\kappa}+1}\right)^k$')
 ax.set_xlabel(r'Iteration $k$', fontsize=11)
-ax.set_ylabel(r'Relative Residual $\|r_k\| / \|r_0\|$', fontsize=11)
+ax.set_ylabel(r'Relative $A$-norm Error $\|x_k - x^*\|_A / \|x_0 - x^*\|_A$', fontsize=11)
 ax.set_title(r'CG Convergence: Same $\kappa$, Different Distributions', fontsize=13)
-ax.legend(fontsize=10)
+ax.legend(fontsize=8)
 ax.grid(True, alpha=0.3, which='both')
 
 # --- Zoomed: first 30 iterations ---
 ax = axes[1, 1]
-ax.semilogy(residuals1[:30] / residuals1[0], linewidth=2, color='#e74c3c',
+ax.semilogy(a_errs1[:30] / a_errs1[0], linewidth=2, color='#e74c3c',
             label='Uniform eigenvalues')
-ax.semilogy(residuals2[:30] / residuals2[0], linewidth=2, color='#3498db',
+ax.semilogy(a_errs2[:30] / a_errs2[0], linewidth=2, color='#3498db',
             label='Clustered eigenvalues')
-ax.semilogy(theory_bound[:30] / residuals1[0], '--', linewidth=1.5, color='gray',
-            label='Worst-case bound')
+ax.semilogy(theory_bound[:30] / a_errs1[0], '--', linewidth=1.5, color='gray',
+            label=r'Worst-case bound $2\left(\frac{\sqrt{\kappa}-1}{\sqrt{\kappa}+1}\right)^k$')
 ax.set_xlabel(r'Iteration $k$', fontsize=11)
-ax.set_ylabel(r'Relative Residual $\|r_k\| / \|r_0\|$', fontsize=11)
+ax.set_ylabel(r'Relative $A$-norm Error $\|x_k - x^*\|_A / \|x_0 - x^*\|_A$', fontsize=11)
 ax.set_title('First 30 Iterations (Zoom)', fontsize=13)
-ax.legend(fontsize=10)
+ax.legend(fontsize=8)
 ax.grid(True, alpha=0.3, which='both')
 
 plt.suptitle(
     r'Eigenvalue Distribution Effect on CG Convergence' + '\n'
-    r'Both matrices have $\kappa = 100$, but clustered eigenvalues converge much faster',
+    r'Both matrices have $\kappa = 100$, but clustered eigenvalues converge much faster'
+    + '\n' + r'Error measured in $A$-norm $\|x_k - x^*\|_A$ = theoretical bound quantity',
     fontsize=15, y=1.01)
 plt.tight_layout()
 

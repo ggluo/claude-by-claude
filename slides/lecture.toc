@@ -1,7 +1,7 @@
 \beamer@sectionintoc {1}{Motivation}{3}{0}{1}
 \beamer@sectionintoc {2}{Linear Systems as Optimization}{8}{0}{2}
-\beamer@sectionintoc {3}{Steepest Descent}{17}{0}{3}
-\beamer@sectionintoc {4}{Conjugate Gradient}{23}{0}{4}
-\beamer@sectionintoc {5}{Convergence Properties}{31}{0}{5}
-\beamer@sectionintoc {6}{Multi-Coil MRI Reconstruction}{38}{0}{6}
-\beamer@sectionintoc {7}{Summary}{47}{0}{7}
+\beamer@sectionintoc {3}{Steepest Descent}{19}{0}{3}
+\beamer@sectionintoc {4}{Conjugate Gradient}{25}{0}{4}
+\beamer@sectionintoc {5}{Convergence Properties}{33}{0}{5}
+\beamer@sectionintoc {6}{Multi-Coil MRI Reconstruction}{40}{0}{6}
+\beamer@sectionintoc {7}{Summary}{49}{0}{7}

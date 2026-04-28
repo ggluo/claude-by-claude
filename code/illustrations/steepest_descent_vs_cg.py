@@ -118,8 +118,8 @@ print(f"CG converges in at most n={A.shape[0]} steps for exact arithmetic!")
 # %% [markdown]
 # ## Create Contour Grid
 #
-# We use logarithmic contour spacing for better visualization of the quadratic
-# function's bowl shape. A small epsilon is added to avoid log(0).
+# We use linearly-spaced contour levels so that labels show true function
+# values, making it easier for undergraduates to read.
 
 # %%
 # Create contour grid
@@ -128,12 +128,10 @@ y_range = np.linspace(-1.0, 2.5, 200)
 X, Y = np.meshgrid(x_range, y_range)
 Z = np.vectorize(lambda xv, yv: f(xv, yv))(X, Y)
 
-# Use log-spaced contour levels for visualization of the quadratic form.
-# Add a small epsilon to the minimum to prevent log(0) issues, then offset
-# from the actual minimum.
-eps = 1e-10
-Z_shifted = Z - Z.min() + eps
-levels = np.logspace(np.log10(Z_shifted.min()), np.log10(Z_shifted.max()), 20)
+# Use linearly-spaced contour levels for intuitive labeling.
+# Linear spacing shows true function values, which is clearer for undergraduates
+# than log-spaced levels on shifted data.
+levels = np.linspace(Z.min(), Z.max(), 20)
 
 # %% [markdown]
 # ## Plot Side-by-Side Comparison
@@ -250,4 +248,47 @@ plt.tight_layout()
 outpath3 = os.path.join(fig_dir, 'paraboloid_contours.pdf')
 plt.savefig(outpath3, dpi=150, bbox_inches='tight')
 print(f"Figure saved to {outpath3}")
+plt.show()
+
+# %% [markdown]
+# ## SD-Only Contour Plot (for "Why Steepest Descent is Slow" Slide)
+#
+# This figure shows ONLY the steepest descent trajectory on the contours,
+# with no CG path visible. It is used on the "Why Steepest Descent is Slow"
+# frame, which appears *before* CG is formally introduced. Showing CG here
+# would confuse students with an unexplained blue trajectory.
+#
+# The full SD+CG comparison figure is `steepest_descent_vs_cg.pdf`, which
+# is used later after CG has been introduced.
+
+# %%
+fig, ax = plt.subplots(figsize=(8, 6))
+
+# Draw contours
+ax.contour(X, Y, Z, levels=levels, colors='gray', alpha=0.5, linewidths=0.5)
+
+# Plot only the steepest descent trajectory
+ax.plot(traj_sd[:, 0], traj_sd[:, 1], 'o-', color='#e74c3c', linewidth=2,
+        markersize=7, markerfacecolor='white', markeredgewidth=2, label='Steepest Descent')
+
+# Mark start and optimum
+ax.plot(traj_sd[0, 0], traj_sd[0, 1], 's', color='black', markersize=10,
+        label=r'Start $x_0$')
+ax.plot(1, 1, '*', color='#2ecc71', markersize=18, markeredgewidth=1.5,
+        label=r'Optimum $x^*$')
+
+ax.set_xlabel(r'$x_1$', fontsize=12)
+ax.set_ylabel(r'$x_2$', fontsize=12)
+ax.set_title('Steepest Descent: Zigzag in a Narrow Valley\n'
+             r'Minimizing $f(x) = \frac{1}{2}x^T A x - b^T x$, $\kappa(A) \approx 10$',
+             fontsize=14)
+ax.legend(fontsize=10, loc='upper right')
+ax.set_aspect('equal')
+ax.grid(True, alpha=0.2)
+
+plt.tight_layout()
+
+outpath4 = os.path.join(fig_dir, 'sd_zigzag_only.pdf')
+plt.savefig(outpath4, dpi=150, bbox_inches='tight')
+print(f"Figure saved to {outpath4}")
 plt.show()

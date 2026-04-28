@@ -227,6 +227,14 @@ def zero_filled_reconstruction(kspace_data, sensitivity_maps):
     which makes it better than a purely naive IFFT. However, it does NOT solve
     the full SENSE inverse problem — the zero-filling in k-space still produces
     aliasing artifacts from the undersampling.
+
+    IMPORTANT PEDAGOGICAL NOTE: The sensitivity-weighted zero-filled reconstruction
+    can have WORSE NRMSE than the naive sum-of-squares. This is counterintuitive
+    but instructive — the sensitivity weighting amplifies aliasing patterns at
+    locations where the sum-of-squares normalizer (sum |s_i|^2) is small. This
+    demonstrates that "using more physics doesn't always guarantee better results
+    if you don't fully invert the model." Only CG (which properly inverts the
+    SENSE forward model) avoids this issue.
     """
     C = len(kspace_data)
     N = kspace_data[0].shape[0]
@@ -331,56 +339,46 @@ def compute_sense_rhs(kspace_data, sensitivity_maps):
 # The inner product for complex vectors is $\langle u, v \rangle = u^H v = \sum \overline{u_j} v_j$.
 
 # %%
-def conjugate_gradient_sense(kspace_data, sensitivity_maps, mask,
-                              x0=None, max_iter=50, tol=1e-6,
-                              lambda_reg=0.0, x_true=None):
+def conjugate_gradient(A_operator, b, x0=None, max_iter=50, tol=1e-6,
+                       x_true=None):
     """
-    Solve the SENSE inverse problem using Conjugate Gradient.
-
-    Solves: (A_norm + lambda I) x = b
-
-    where:
-    - A_norm = sum_i S_i^H F^H M F S_i  (the SENSE normal operator)
-    - b = sum_i S_i^H F^H y_i           (the right-hand side)
-    - lambda >= 0 is an optional Tikhonov regularization parameter
-
-    This is a hand-written CG implementation that uses matrix-free
-    operator application via FFTs.
+    Pure Conjugate Gradient for solving A x = b with A Hermitian positive definite.
 
     Parameters:
-    - x_true: optional ground truth for tracking true reconstruction error
+    - A_operator: callable, computes A @ v for any vector v
+    - b: right-hand side vector (complex array)
+    - x0: initial guess (default: zeros)
+    - max_iter: maximum iterations
+    - tol: relative residual tolerance
+    - x_true: optional ground truth for tracking true reconstruction error.
+      If provided, true_errors[i] = NRMSE of magnitude image at iteration i.
+      NOTE: We use the magnitude image |x| for error because the phantom is
+      real and non-negative; magnitude error is the clinically relevant metric.
+      The complex reconstruction may have nonzero phase from coil sensitivity
+      phase variations, so comparing complex values directly would overstate
+      the error.
 
     Returns:
-    - x: reconstructed image
-    - residual_norms: list of residual norms at each iteration
-    - true_errors: list of relative true errors (NRMSE) at each iteration
-                   (only if x_true is provided)
+    - x: approximate solution
+    - residual_norms: residual norm at each iteration
+    - true_errors: relative true NRMSE at each iteration (empty if no x_true)
     """
-    N = kspace_data[0].shape[0]
-
-    # Compute right-hand side
-    b = compute_sense_rhs(kspace_data, sensitivity_maps)
-
     # Initial guess
     if x0 is None:
-        x = np.zeros((N, N), dtype=np.complex128)
+        x = np.zeros_like(b, dtype=b.dtype)
     else:
         x = x0.copy()
 
-    # Define the operator A_lambda = A_norm + lambda I
-    def apply_A(v):
-        """Apply the regularized normal operator to v."""
-        Av = apply_sense_normal_operator(v, sensitivity_maps, mask)
-        if lambda_reg > 0:
-            Av += lambda_reg * v
-        return Av
-
     # CG initialization
-    r = b - apply_A(x)   # initial residual
-    p = r.copy()          # first search direction
+    r = b - A_operator(x)
+    p = r.copy()
     residual_norms = [np.sqrt(np.real(np.sum(np.conj(r) * r)))]
 
     # Track true reconstruction error if ground truth is provided
+    # NOTE: We compare magnitude images (np.abs(x)) to the real phantom.
+    # The phantom is real and non-negative; complex phase in the reconstruction
+    # comes from coil sensitivity variations and is not clinically meaningful.
+    # For display and clinical diagnosis, only the magnitude matters.
     if x_true is not None:
         true_norm = np.linalg.norm(x_true)
         true_errors = [np.linalg.norm(np.abs(x) - x_true) / true_norm]
@@ -388,7 +386,7 @@ def conjugate_gradient_sense(kspace_data, sensitivity_maps, mask,
         true_errors = []
 
     for k in range(max_iter):
-        Ap = apply_A(p)
+        Ap = A_operator(p)
 
         # Step size alpha = (r^H r) / (p^H A p)
         r_norm_sq = np.real(np.sum(np.conj(r) * r))
@@ -431,6 +429,56 @@ def conjugate_gradient_sense(kspace_data, sensitivity_maps, mask,
               f"residual relative = {residual_norms[-1]/residual_norms[0]:.2e}")
 
     return x, np.array(residual_norms), np.array(true_errors)
+
+# %%
+def conjugate_gradient_sense(kspace_data, sensitivity_maps, mask,
+                              x0=None, max_iter=50, tol=1e-6,
+                              lambda_reg=1e-3, x_true=None):
+    """
+    Solve the SENSE inverse problem using Conjugate Gradient.
+
+    This function sets up the SENSE-specific linear operator and right-hand
+    side, then delegates to the generic conjugate_gradient() solver.
+
+    Solves: (A_norm + lambda I) x = b
+
+    where:
+    - A_norm = sum_i S_i^H F^H M F S_i  (the SENSE normal operator)
+    - b = sum_i S_i^H F^H y_i           (the right-hand side)
+    - lambda > 0 is an optional Tikhonov regularization parameter.
+
+      NOTE: The default lambda_reg=1e-3 (not 0.0) to ensure positive definiteness
+      of the normal equations. With lambda_reg=0.0 and aggressive undersampling
+      (R >= 4), the normal equations may become singular and CG will break down
+      (p^H A p → 0). A small regularization term shifts all eigenvalues by lambda,
+      making the system strictly positive definite. This matches the lecture's
+      teaching about the need for regularization in the SENSE normal equations.
+
+    Parameters:
+    - x_true: optional ground truth for tracking true reconstruction error
+
+    Returns:
+    - x: reconstructed image
+    - residual_norms: list of residual norms at each iteration
+    - true_errors: list of relative true errors (NRMSE) at each iteration
+                   (only if x_true is provided)
+    """
+    N = kspace_data[0].shape[0]
+
+    # Compute right-hand side
+    b = compute_sense_rhs(kspace_data, sensitivity_maps)
+
+    # Define the operator A_lambda = A_norm + lambda I
+    def apply_A(v):
+        """Apply the regularized SENSE normal operator to v."""
+        Av = apply_sense_normal_operator(v, sensitivity_maps, mask)
+        if lambda_reg > 0:
+            Av += lambda_reg * v
+        return Av
+
+    # Delegate to generic CG solver
+    return conjugate_gradient(apply_A, b, x0=x0, max_iter=max_iter, tol=tol,
+                              x_true=x_true)
 
 # %% [markdown]
 # ## 7. Run the Full Pipeline
@@ -486,8 +534,18 @@ print("4b. Computing zero-filled reconstruction (with sensitivity weighting)..."
 t0 = time.time()
 recon_zf = zero_filled_reconstruction(kspace_data, sens_maps)
 t_zf = time.time() - t0
+# NOTE: magnitude error is clinically relevant (phantom is real, non-negative)
 error_zf = np.linalg.norm(np.abs(recon_zf) - phantom) / np.linalg.norm(phantom)
 print(f"   Time: {t_zf:.3f}s, NRMSE: {error_zf:.4f}")
+
+# TEACHING NOTE: The sensitivity-weighted ZF NRMSE ({error_zf:.4f}) may be WORSE
+# than the naive SoS NRMSE ({error_sos:.4f}). This is counterintuitive but
+# instructive — the sensitivity weighting amplifies aliasing (coherent ghosts)
+# at locations where the SoS normalizer sum|s_i|^2 is small. The naive SoS
+# doesn't have this problem because it doesn't divide by sensitivity weights.
+# This is a classic example of "more physics ≠ better results without proper
+# inversion." Only CG, which fully inverts the SENSE model, properly separates
+# the aliased signals without amplifying noise at low-sensitivity regions.
 
 # Step 5: CG reconstruction
 print("5. Running Conjugate Gradient reconstruction...")
@@ -500,7 +558,7 @@ recon_cg, cg_residuals, cg_true_errors = conjugate_gradient_sense(
 )
 t_cg = time.time() - t0
 
-# Get magnitude for display
+# Get magnitude for display (clinically relevant metric)
 recon_cg_mag = np.abs(recon_cg)
 error_cg = np.linalg.norm(recon_cg_mag - phantom) / np.linalg.norm(phantom)
 print(f"   Time: {t_cg:.3f}s, NRMSE: {error_cg:.4f}")
@@ -510,62 +568,48 @@ print(f"   CG iterations: {len(cg_residuals)-1}")
 # ## 8. Visualize Results
 
 # %%
-# --- Figure 1: Reconstruction Comparison ---
-fig, axes = plt.subplots(2, 5, figsize=(24, 10))
+# --- Figure 1: Reconstruction Comparison (2x4 layout) ---
+fig, axes = plt.subplots(2, 4, figsize=(20, 10))
 
-# Original phantom
+# Row 0: Ground truth and coil sensitivity map examples
 ax = axes[0, 0]
 im = ax.imshow(phantom, cmap='gray', origin='lower')
 ax.set_title('Original Phantom\n(Ground Truth)', fontsize=11, fontweight='bold')
 ax.axis('off')
 plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
-# Show sensitivity maps (first 4)
-for c in range(min(4, n_coils)):
-    row = 0 if c < 2 else 1
-    col = 1 + (c % 2)
-    ax = axes[row, col]
+# Show coil sensitivity magnitudes (first 3 coils in top row, cols 1-3)
+for c in range(min(3, n_coils)):
+    ax = axes[0, c + 1]
     im = ax.imshow(np.abs(sens_maps[c]), cmap='viridis', origin='lower')
-    ax.set_title(r'Coil %d Sensitivity\n$|s_{%d}(r)|$' % (c+1, c+1), fontsize=10)
+    ax.set_title(r'Coil %d Sensitivity $|s_{%d}|$' % (c+1, c+1), fontsize=10)
     ax.axis('off')
+    plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
-# Naive SoS reconstruction
+# Row 1: Reconstructions + mask
 ax = axes[1, 0]
 im = ax.imshow(recon_sos, cmap='gray', origin='lower')
-ax.set_title(r'Naive SoS IFFT\\NRMSE=%.3f\\No sens. info, heavy shading' % error_sos,
-             fontsize=10)
+ax.set_title(r'Naive SoS IFFT (NRMSE=%.3f)' % error_sos, fontsize=10)
 ax.axis('off')
 plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
-# Zero-filled reconstruction (sensitivity-weighted)
 ax = axes[1, 1]
 im = ax.imshow(np.abs(recon_zf), cmap='gray', origin='lower')
-ax.set_title(r'Zero-Filled IFFT\\R=%d, NRMSE=%.3f\\Sens.-weighted, aliasing' % (R, error_zf),
-             fontsize=10)
+ax.set_title(r'Zero-Filled IFFT (NRMSE=%.3f)' % error_zf, fontsize=10)
 ax.axis('off')
 plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
-# CG reconstruction
 ax = axes[1, 2]
 im = ax.imshow(recon_cg_mag, cmap='gray', origin='lower')
-ax.set_title(r'CG Reconstruction\\R=%d, NRMSE=%.3f\\Aliasing removed' % (R, error_cg),
+ax.set_title(r'CG SENSE (NRMSE=%.3f, %d iter)' % (error_cg, len(cg_residuals)-1),
              fontsize=10)
 ax.axis('off')
 plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
-# Undersampling mask
 ax = axes[1, 3]
-ax.imshow(mask, cmap='gray', origin='lower')
-ax.set_title(r'Undersampling Mask\\R=%d, %.0f%% acquired' % (R, undersampling_ratio*100),
-             fontsize=10)
-ax.axis('off')
-
-# Error map (difference between CG and original)
-ax = axes[1, 4]
 error_map = np.abs(recon_cg_mag - phantom)
 im = ax.imshow(error_map, cmap='hot', origin='lower')
-ax.set_title(r'Error Map\\$|x_{\rm CG}| - x_{\rm true}$',
-             fontsize=10)
+ax.set_title(r'Error Map $|x_{\rm CG}| - x_{\rm true}$', fontsize=10)
 ax.axis('off')
 plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 

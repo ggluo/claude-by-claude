@@ -72,6 +72,26 @@ This will:
   since it uses no sensitivity information at all.
 - **Zero-filled reconstruction** (with sensitivity-weighted combination) reduces
   shading but still shows aliasing artifacts from undersampling.
+
+### Why Zero-Filled Can Be Worse Than Naive SoS
+
+A **counterintuitive but instructive** result: the sensitivity-weighted
+zero-filled reconstruction often has *worse* NRMSE than the completely naive
+sum-of-squares (e.g., 0.77 vs 0.58). This happens because:
+
+1. The sensitivity-weighted combination divides each coil image by a
+   sum-of-squares normalizer $\sum_i |s_i(\mathbf{r})|^2$,
+2. In regions where this normalizer is small (e.g., far from all coils),
+   the division amplifies aliasing artifacts from the undersampled k-space,
+3. The naive SoS avoids this amplification — it simply adds squared magnitudes
+   without any spatial normalization, so aliasing isn't concentrated at
+   low-sensitivity locations.
+
+This is a great teaching moment about inverse problems: **"Using more physics
+doesn't always guarantee better results if you don't fully invert the model."**
+Only CG, which properly solves the full SENSE linear system, correctly separates
+the aliased signals without amplifying noise at low-sensitivity regions.
+
 - **CG reconstruction** removes aliasing by using coil sensitivity information to
   separate overlapping signals (the SENSE principle).
 - CG converges quickly (typically 10-20 iterations) because the normal equations
@@ -91,6 +111,16 @@ An important phenomenon in inverse problems is **semiconvergence**:
 
 The convergence plot (`mri_cg_convergence.pdf`) shows both the residual and the
 true error on the same axes to illustrate this effect.
+
+### CG Implementation Note
+
+The CG solver is implemented as a generic `conjugate_gradient(A_operator, b, ...)`
+function that takes an abstract linear operator. The SENSE-specific setup
+(computing the RHS via coil sensitivities, constructing the normal operator)
+is separated into `conjugate_gradient_sense()`, which delegates to the generic
+CG solver. This separation helps students understand:
+1. What CG does (the generic iterative algorithm)
+2. How SENSE uses CG (the problem-specific setup)
 
 ## References
 
