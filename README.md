@@ -6,13 +6,13 @@ A shell script that orchestrates two Claude agents in an iterative feedback loop
 
 ```bash
 # Start from scratch
-./run-lecture-prep.sh
+./create-slides.sh
 
 # Resume after a crash
-./run-lecture-prep.sh --resume
+./create-slides.sh --resume
 
 # Custom output directory
-./run-lecture-prep.sh /path/to/output
+./create-slides.sh /path/to/output
 ```
 
 ## Architecture
